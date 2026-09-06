@@ -124,10 +124,9 @@ export function AuthProvider({ children }) {
         : [];
       setCompletedTopics(initialTopics);
 
-      const defaultCourses = ["1", "2"];
       const initialCourses = (user.enrolled_courses && user.enrolled_courses.length > 0)
         ? user.enrolled_courses
-        : defaultCourses;
+        : [];
       setEnrolledCourses(initialCourses.map(id => id.toString()));
     } else {
       setXp(0);
@@ -240,6 +239,25 @@ export function AuthProvider({ children }) {
         return next;
       });
     }
+  };
+
+  const clearUserLocalData = (emailOrKey) => {
+    if (!emailOrKey) return;
+    const cleanKey = emailOrKey.toLowerCase();
+    const keys = [
+      `enrolledCourses_${cleanKey}`,
+      `skillsphere_enrolled_courses_${cleanKey}`,
+      `skillsphere_completed_sub_lessons_${cleanKey}`,
+      `skillsphere_earned_badges_${cleanKey}`,
+      `skillsphere_earned_certs_${cleanKey}`,
+      `ss_activity_${cleanKey}`,
+      `skillsphere_saved_courses_${cleanKey}`,
+      `skillsphere_user_profile_${cleanKey}`,
+      `skillsphere_assessments_passed_${cleanKey}`
+    ];
+    keys.forEach(k => {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
   };
 
   const clearSession = () => {
@@ -365,14 +383,52 @@ export function AuthProvider({ children }) {
           email: 'student@skillsphere.com',
           full_name: 'Student Learner',
           role: 'STUDENT',
-          xp: 1250,
-          streak: 5
+          xp: 0,
+          streak: 0
         };
       });
       setLoading(false);
     };
     initializeAuth();
   }, []);
+
+  const syncNewUserToAdminCache = (userData, userRole, fullName, username, email) => {
+    try {
+      const isStudent = (userRole || 'STUDENT').toUpperCase() === 'STUDENT';
+      const storageKey = isStudent ? 'admin_users' : 'admin_workforce';
+      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const id = Number(userData?.id) || Date.now();
+      const name = fullName || userData?.full_name || userData?.fullName || username || userData?.username || 'User';
+      const userEmail = email || userData?.email;
+
+      const newEntry = isStudent ? {
+        id,
+        name,
+        email: userEmail,
+        role: "STUDENT",
+        status: "Active",
+        createdAt: new Date().toISOString()
+      } : {
+        id,
+        name,
+        email: userEmail,
+        role: (userRole || 'EMPLOYEE').toUpperCase(),
+        dept: "Engineering",
+        status: "Approved",
+        createdAt: new Date().toISOString()
+      };
+
+      if (!existing.some(item => item.email?.toLowerCase() === userEmail?.toLowerCase())) {
+        const updated = [newEntry, ...existing];
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      }
+
+      // Dispatch event so Admin Dashboard updates immediately in real-time
+      window.dispatchEvent(new CustomEvent('skillsphere_sync_event'));
+    } catch (e) {
+      console.warn("Failed updating admin cache on registration:", e);
+    }
+  };
 
   const loginWithGoogle = async (credential, role) => {
     const response = await fetch(`${API_URL}/auth/google`, {
@@ -385,10 +441,13 @@ export function AuthProvider({ children }) {
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     await fetchProfile(data.accessToken, false, true);
+    syncNewUserToAdminCache(data.user, role, data.user?.full_name, data.user?.username, data.user?.email);
     return data.user;
   };
 
   const signupLocal = async (username, full_name, email, password, role) => {
+    clearUserLocalData(email);
+    clearUserLocalData(username);
     const response = await fetch(`${API_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -400,6 +459,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     await fetchProfile(data.accessToken, false, true);
+    syncNewUserToAdminCache(data.user, role, full_name, username, email);
     return data.user;
   };
 
@@ -442,8 +502,8 @@ export function AuthProvider({ children }) {
         email: email,
         full_name: `${formattedName} Learner`,
         role: isWorkforce ? 'EMPLOYEE' : 'STUDENT',
-        xp: 1250,
-        streak: 5
+        xp: 0,
+        streak: 0
       };
 
       const mockToken = `mock_token_${Date.now()}`;

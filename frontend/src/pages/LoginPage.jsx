@@ -12,7 +12,9 @@ import {
   FaEyeSlash,
   FaArrowRight,
   FaArrowLeft,
-  FaShieldAlt
+  FaShieldAlt,
+  FaExclamationCircle,
+  FaInfoCircle
 } from "react-icons/fa";
 
 import studentLoginImg from "../assets/student_login_illustration.png";
@@ -43,13 +45,64 @@ export default function LoginPage() {
   const [devEmail, setDevEmail] = useState("");
   const googleBtnRef = useRef(null);
 
+  // Field validation states
+  const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+  const [touched, setTouched] = useState({ email: false, password: false });
+
+  const validateLoginField = (field, val, currentRole = role) => {
+    if (field === "email") {
+      const trimmed = (val || "").trim();
+      if (!trimmed) return "Email address is required";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmed)) {
+        return "Please enter a valid email address";
+      }
+      const lower = trimmed.toLowerCase();
+      if (currentRole === "STUDENT") {
+        if (!lower.endsWith("@gmail.com")) {
+          return "Students must log in using a valid @gmail.com email address";
+        }
+      } else {
+        if (!lower.endsWith("@skillsphere.com")) {
+          return "Workforce members must log in using an official @skillsphere.com email";
+        }
+      }
+      return "";
+    }
+    if (field === "password") {
+      if (!val) return "Password is required";
+      return "";
+    }
+    return "";
+  };
+
+  const handleFieldBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const val = field === "email" ? email : password;
+    const err = validateLoginField(field, val, role);
+    setFieldErrors(prev => ({ ...prev, [field]: err }));
+  };
+
+  const handleFieldChange = (field, val) => {
+    if (field === "email") setEmail(val);
+    if (field === "password") setPassword(val);
+    if (touched[field]) {
+      const err = validateLoginField(field, val, role);
+      setFieldErrors(prev => ({ ...prev, [field]: err }));
+    }
+  };
+
   // Sync ref to avoid stale closures in Google API callback
   useEffect(() => {
     roleRef.current = role;
   }, [role]);
 
   useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const clientId = (rawClientId && !rawClientId.includes('your_google_client_id'))
+      ? rawClientId
+      : '187668431914-r6bca92vusq2seqmopgfa9o5vrub4bi3.apps.googleusercontent.com';
+
     if (!clientId || clientId === 'google_mock_client_id_for_testing') {
       return;
     }
@@ -63,6 +116,17 @@ export default function LoginPage() {
                 setError('');
                 const loggedUser = await loginWithGoogle(response.credential, roleRef.current);
                 if (loggedUser) {
+                  const userEmail = (loggedUser.email || '').toLowerCase();
+                  if (roleRef.current === 'STUDENT' && !userEmail.endsWith('@gmail.com')) {
+                    setError('Students must log in using a valid @gmail.com email address.');
+                    await logout();
+                    return;
+                  }
+                  if (roleRef.current === 'EMPLOYEE' && !userEmail.endsWith('@skillsphere.com')) {
+                    setError('Workforce members must log in using an official @skillsphere.com corporate email.');
+                    await logout();
+                    return;
+                  }
                   if (roleRef.current === 'EMPLOYEE' && loggedUser.role === 'STUDENT') {
                     setError('Enter valid workplace email id');
                     await logout();
@@ -106,13 +170,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Please fill in all fields");
+    setTouched({ email: true, password: true });
+
+    const emailErr = validateLoginField("email", email, role);
+    const passErr = validateLoginField("password", password, role);
+    setFieldErrors({ email: emailErr, password: passErr });
+
+    if (emailErr || passErr) {
+      setError(emailErr || passErr);
       return;
     }
+
     try {
       setError("");
-      const loggedUser = await loginLocal(email, password);
+      const loggedUser = await loginLocal(email.trim(), password);
       if (loggedUser) {
         if (role === 'EMPLOYEE' && loggedUser.role === 'STUDENT') {
           setError('Enter valid workplace email id');
@@ -137,7 +208,7 @@ export default function LoginPage() {
 
   const handleDevBypass = async (e) => {
     e.preventDefault();
-    const targetEmail = devEmail || (role === 'STUDENT' ? 'student@skillsphere.com' : 'employee@skillsphere.com');
+    const targetEmail = devEmail || (role === 'STUDENT' ? 'student@gmail.com' : 'employee@skillsphere.com');
     try {
       setError("");
       const loggedUser = await loginWithGoogle(`mock_google_token_${targetEmail}`, role);
@@ -223,7 +294,12 @@ export default function LoginPage() {
             <button
               type="button"
               className={`roleSegmentBtn ${role === 'STUDENT' ? 'active' : ''}`}
-              onClick={() => { setRole('STUDENT'); setError(''); }}
+              onClick={() => {
+                setRole('STUDENT');
+                setError('');
+                setFieldErrors({ email: '', password: '' });
+                setTouched({ email: false, password: false });
+              }}
             >
               <FaGraduationCap /> Student
             </button>
@@ -231,7 +307,12 @@ export default function LoginPage() {
             <button
               type="button"
               className={`roleSegmentBtn ${role === 'EMPLOYEE' ? 'active' : ''}`}
-              onClick={() => { setRole('EMPLOYEE'); setError(''); }}
+              onClick={() => {
+                setRole('EMPLOYEE');
+                setError('');
+                setFieldErrors({ email: '', password: '' });
+                setTouched({ email: false, password: false });
+              }}
             >
               <FaBriefcase /> Workforce
             </button>
@@ -240,11 +321,11 @@ export default function LoginPage() {
           {error && <div className="errorMessageCard">{error}</div>}
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="loginFormContent" autoComplete="off" data-lpignore="true" data-1p-ignore="true">
+          <form onSubmit={handleSubmit} className="loginFormContent" autoComplete="off" data-lpignore="true" data-1p-ignore="true" noValidate>
             {/* Email Field */}
             <div className="inputFieldGroup">
-              <label htmlFor="login-email">Email Address</label>
-              <div className="inputWithIconWrapper">
+              <label htmlFor="login-email">Email Address *</label>
+              <div className={`inputWithIconWrapper ${touched.email && fieldErrors.email ? 'has-error' : touched.email && email ? 'has-success' : ''}`}>
                 <FaEnvelope className="fieldPrefixIcon" />
                 <input
                   id="login-email"
@@ -252,18 +333,35 @@ export default function LoginPage() {
                   name="user_email_address"
                   autoComplete="off"
                   data-lpignore="true"
-                  placeholder={role === 'STUDENT' ? "student@gmail.com" : "workforce@company.com"}
+                  placeholder={role === 'STUDENT' ? "student@gmail.com" : "employee@skillsphere.com"}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
+                  onBlur={() => handleFieldBlur('email')}
                   required
                 />
               </div>
+
+              {/* Role Domain Requirement Notice */}
+              <div className="fieldDomainNotice">
+                <FaInfoCircle />
+                <span>
+                  {role === 'STUDENT'
+                    ? 'Student requirement: must log in using an @gmail.com email'
+                    : 'Workforce requirement: must log in using an @skillsphere.com corporate email'}
+                </span>
+              </div>
+
+              {touched.email && fieldErrors.email && (
+                <div className="fieldErrorMessage">
+                  <FaExclamationCircle /> {fieldErrors.email}
+                </div>
+              )}
             </div>
 
             {/* Password Field */}
             <div className="inputFieldGroup">
-              <label htmlFor="login-password">Password</label>
-              <div className="inputWithIconWrapper">
+              <label htmlFor="login-password">Password *</label>
+              <div className={`inputWithIconWrapper ${touched.password && fieldErrors.password ? 'has-error' : touched.password && password ? 'has-success' : ''}`}>
                 <FaLock className="fieldPrefixIcon" />
                 <input
                   id="login-password"
@@ -275,7 +373,8 @@ export default function LoginPage() {
                   data-form-type="other"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => handleFieldChange('password', e.target.value)}
+                  onBlur={() => handleFieldBlur('password')}
                   required
                 />
                 <button
@@ -286,6 +385,11 @@ export default function LoginPage() {
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
+              {touched.password && fieldErrors.password && (
+                <div className="fieldErrorMessage">
+                  <FaExclamationCircle /> {fieldErrors.password}
+                </div>
+              )}
             </div>
 
             {/* Remember & Forgot Password Options */}

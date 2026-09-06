@@ -100,8 +100,8 @@ public class UserController {
         }
         userData.put("completed_topics", completedTopicsList);
 
-        userData.put("streak", user.getStreak() != null ? user.getStreak() : 1);
-        userData.put("longest_streak", user.getLongestStreak() != null ? user.getLongestStreak() : 1);
+        userData.put("streak", user.getStreak() != null ? user.getStreak() : 0);
+        userData.put("longest_streak", user.getLongestStreak() != null ? user.getLongestStreak() : 0);
         userData.put("total_study_time", user.getTotalStudyTime() != null ? user.getTotalStudyTime() : 0);
         userData.put("activity_map", user.getActivityMap() != null ? user.getActivityMap() : "{}");
 
@@ -408,7 +408,8 @@ public class UserController {
         }
         
         if (lastLogin == null) {
-            user.setStreak(1);
+            if (user.getStreak() == null) user.setStreak(0);
+            if (user.getLongestStreak() == null) user.setLongestStreak(0);
             user.setLastLoginAt(now);
             userRepository.save(user);
             return;
@@ -417,15 +418,16 @@ public class UserController {
         long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(lastLogin.toLocalDate(), now.toLocalDate());
         
         if (daysDiff == 1) {
-            user.setStreak((user.getStreak() != null ? user.getStreak() : 0) + 1);
-            int longest = user.getLongestStreak() != null ? user.getLongestStreak() : 1;
+            int current = user.getStreak() != null ? user.getStreak() : 0;
+            user.setStreak(current + 1);
+            int longest = user.getLongestStreak() != null ? user.getLongestStreak() : 0;
             if (user.getStreak() > longest) {
                 user.setLongestStreak(user.getStreak());
             }
             user.setLastLoginAt(now);
             userRepository.save(user);
         } else if (daysDiff > 1) {
-            user.setStreak(1);
+            user.setStreak(0);
             user.setLastLoginAt(now);
             userRepository.save(user);
         }

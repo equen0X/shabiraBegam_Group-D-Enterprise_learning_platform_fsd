@@ -1,5 +1,7 @@
 package com.skillsphere.backend.controller;
 
+import com.skillsphere.backend.model.Employee;
+import com.skillsphere.backend.repository.EmployeeRepository;
 import com.skillsphere.backend.model.PasswordResetToken;
 import com.skillsphere.backend.model.RefreshToken;
 import com.skillsphere.backend.model.User;
@@ -22,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JwtTokenProvider tokenProvider;
@@ -31,6 +34,7 @@ public class AuthController {
 
     public AuthController(
             UserRepository userRepository,
+            EmployeeRepository employeeRepository,
             RefreshTokenRepository refreshTokenRepository,
             PasswordResetTokenRepository passwordResetTokenRepository,
             JwtTokenProvider tokenProvider,
@@ -38,6 +42,7 @@ public class AuthController {
             BCryptPasswordEncoder passwordEncoder,
             ObjectMapper objectMapper) {
         this.userRepository = userRepository;
+        this.employeeRepository = employeeRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.tokenProvider = tokenProvider;
@@ -86,6 +91,22 @@ public class AuthController {
         // Validate and set role
         String targetRole = Arrays.asList("STUDENT", "EMPLOYEE", "MANAGER", "ADMIN").contains(role) ? role : "STUDENT";
 
+        // Validate email domain based on role
+        String normalizedEmail = email.trim().toLowerCase();
+        if ("STUDENT".equalsIgnoreCase(targetRole)) {
+            if (!normalizedEmail.endsWith("@gmail.com")) {
+                response.put("success", false);
+                response.put("message", "Students must register with a valid @gmail.com email address");
+                return ResponseEntity.status(400).body(response);
+            }
+        } else if ("EMPLOYEE".equalsIgnoreCase(targetRole) || "MANAGER".equalsIgnoreCase(targetRole)) {
+            if (!normalizedEmail.endsWith("@skillsphere.com")) {
+                response.put("success", false);
+                response.put("message", "Workforce members must register with an official @skillsphere.com corporate email address");
+                return ResponseEntity.status(400).body(response);
+            }
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setFullName(fullName);
@@ -94,8 +115,30 @@ public class AuthController {
         user.setRole(targetRole);
         user.setProvider("LOCAL");
         user.setIsActive(true);
+        user.setXp(0);
+        user.setStreak(0);
+        user.setLongestStreak(0);
+        user.setTotalStudyTime(0);
+        user.setCompletedTopics("");
+        user.setBadges("");
+        user.setEnrolledCourses("");
+        user.setClaimedQuests("");
+        user.setActivityMap("{}");
 
         User savedUser = userRepository.save(user);
+
+        // If registering as EMPLOYEE or MANAGER, ensure employee record exists for workforce management
+        if ("EMPLOYEE".equalsIgnoreCase(targetRole) || "MANAGER".equalsIgnoreCase(targetRole)) {
+            if (employeeRepository.findByName(fullName).isEmpty()) {
+                employeeRepository.save(new Employee(
+                        fullName,
+                        targetRole.equalsIgnoreCase("MANAGER") ? "Project Manager" : "Associate Engineer",
+                        "Engineering",
+                        "Active",
+                        85
+                ));
+            }
+        }
 
         // Generate tokens
         String accessToken = tokenProvider.generateAccessToken(savedUser);
@@ -255,9 +298,31 @@ public class AuthController {
                     user.setProviderId(googleId);
                     user.setRole(targetRole);
                     user.setIsActive(true);
-                    updateStreakAndActivity(user);
+                    user.setXp(0);
+                    user.setStreak(0);
+                    user.setLongestStreak(0);
+                    user.setTotalStudyTime(0);
+                    user.setCompletedTopics("");
+                    user.setBadges("");
+                    user.setEnrolledCourses("");
+                    user.setClaimedQuests("");
+                    user.setActivityMap("{}");
                     user.setLastLoginAt(LocalDateTime.now());
                     user = userRepository.save(user);
+
+                    // If registering as EMPLOYEE or MANAGER, ensure employee record exists for workforce management
+                    if ("EMPLOYEE".equalsIgnoreCase(targetRole) || "MANAGER".equalsIgnoreCase(targetRole)) {
+                        String empName = user.getFullName() != null ? user.getFullName() : user.getUsername();
+                        if (employeeRepository.findByName(empName).isEmpty()) {
+                            employeeRepository.save(new Employee(
+                                    empName,
+                                    targetRole.equalsIgnoreCase("MANAGER") ? "Project Manager" : "Associate Engineer",
+                                    "Engineering",
+                                    "Active",
+                                    85
+                            ));
+                        }
+                    }
                 }
             }
 
@@ -547,7 +612,7 @@ public class AuthController {
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
 
             if (lastLogin == null) {
-                user.setStreak(1);
+                user.setStreak(0);
             } else {
                 long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(lastLogin.toLocalDate(), now.toLocalDate());
                 if (daysDiff == 1) {
@@ -557,8 +622,8 @@ public class AuthController {
                 }
             }
 
-            int currentStreak = user.getStreak() != null ? user.getStreak() : 1;
-            int longest = user.getLongestStreak() != null ? user.getLongestStreak() : 1;
+            int currentStreak = user.getStreak() != null ? user.getStreak() : 0;
+            int longest = user.getLongestStreak() != null ? user.getLongestStreak() : 0;
             if (currentStreak > longest) {
                 user.setLongestStreak(currentStreak);
             }

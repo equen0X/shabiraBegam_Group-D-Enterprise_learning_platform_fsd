@@ -707,7 +707,7 @@ export default function FlashcardsPage() {
                   <div className="fcpMetricIcon green"><FaFire /></div>
                   <div className="fcpMetricMeta">
                     <label>Study Streak</label>
-                    <strong>5 Days</strong>
+                    <strong>{user?.streak || 0} Days</strong>
                   </div>
                 </div>
 

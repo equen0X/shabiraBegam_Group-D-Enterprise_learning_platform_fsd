@@ -808,3 +808,208 @@
 .cpWrapper.dark-theme .lvlBarTrack {
   background: #334155 !important;
 }
+
+/* ── LINKEDIN SHARE MODAL ── */
+.cpModalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: cpModalFadeIn 0.2s ease-out;
+}
+
+.cpModalBox {
+  background: #FFFFFF;
+  border-radius: 22px;
+  width: 100%;
+  max-width: 660px;
+  padding: 28px 30px;
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.35);
+  border: 1px solid #F3EBE1;
+  animation: cpModalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes cpModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cpModalScale {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.cpModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 16px;
+}
+
+.cpModalCloseBtn {
+  background: #F1F5F9;
+  border: none;
+  color: #64748B;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cpModalCloseBtn:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+  transform: rotate(90deg);
+}
+
+.cpLinkedInPreviewCard {
+  background: #F8FAFC;
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 22px;
+}
+
+.cpLinkedInActionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .cpLinkedInActionsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cpBtnLinkedInPrimary {
+  background: #0A66C2;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 4px 12px rgba(10, 102, 194, 0.25);
+}
+
+.cpBtnLinkedInPrimary:hover {
+  background: #004182;
+  transform: translateY(-1px);
+}
+
+.cpBtnLinkedInSecondary {
+  background: #FFFFFF;
+  color: #0A66C2;
+  border: 2px solid #0A66C2;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cpBtnLinkedInSecondary:hover {
+  background: #F0F7FF;
+  transform: translateY(-1px);
+}
+
+.cpBtnAuxiliary {
+  background: #F1F5F9;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cpBtnAuxiliary:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+/* Dark mode modal overrides */
+.cpWrapper.dark-theme .cpModalBox {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
+}
+
+.cpWrapper.dark-theme .cpModalHeader {
+  border-bottom-color: #334155 !important;
+}
+
+.cpWrapper.dark-theme .cpModalCloseBtn {
+  background: #334155 !important;
+  color: #94A3B8 !important;
+}
+
+.cpWrapper.dark-theme .cpModalCloseBtn:hover {
+  background: #475569 !important;
+  color: #F8FAFC !important;
+}
+
+.cpWrapper.dark-theme .cpLinkedInPreviewCard {
+  background: #0F172A !important;
+  border-color: #334155 !important;
+}
+
+.cpWrapper.dark-theme .cpBtnLinkedInSecondary {
+  background: #1E293B !important;
+  border-color: #38BDF8 !important;
+  color: #38BDF8 !important;
+}
+
+.cpWrapper.dark-theme .cpBtnLinkedInSecondary:hover {
+  background: rgba(56, 189, 248, 0.1) !important;
+}
+
+.cpWrapper.dark-theme .cpBtnAuxiliary {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #E2E8F0 !important;
+}
+
+.cpWrapper.dark-theme .cpBtnAuxiliary:hover {
+  background: #475569 !important;
+  color: #FFFFFF !important;
+}
+

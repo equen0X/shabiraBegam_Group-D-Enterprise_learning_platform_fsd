@@ -120,8 +120,8 @@ export default function BadgesPage() {
   const totalSubCount = completedSubLessonIds.length;
 
   const earnedBadges = [
-    { id: 1, title: "Getting Started", desc: "Complete your first lesson", xp: "+50 XP", date: "Earned", icon: <FaTrophy />, color: "orange", isEarned: true },
-    { id: 2, title: "Lesson Learner", desc: "Complete 10 lessons", xp: "+100 XP", date: "Earned", icon: <FaBook />, color: "green", isEarned: userBadges.includes("Lesson Learner") || userBadges.includes("2") || (user?.completed_topics || []).length >= 1 || totalSubCount >= 1 },
+    { id: 1, title: "Getting Started", desc: "Complete your first lesson", xp: "+50 XP", date: "Earned", icon: <FaTrophy />, color: "orange", isEarned: userBadges.includes("Getting Started") || userBadges.includes("1") || (user?.completed_topics || []).length >= 1 || totalSubCount >= 1 },
+    { id: 2, title: "Lesson Learner", desc: "Complete 10 lessons", xp: "+100 XP", date: "Earned", icon: <FaBook />, color: "green", isEarned: userBadges.includes("Lesson Learner") || userBadges.includes("2") || (user?.completed_topics || []).length >= 10 || totalSubCount >= 10 },
     { id: 3, title: "Quiz Master", desc: "Score 90% or more in a quiz", xp: "+150 XP", date: "Earned", icon: <FaQuestionCircle />, color: "purple", isEarned: userBadges.includes("Quiz Master") || userBadges.includes("3") },
     { id: 4, title: "Code Explorer", desc: "Solve 20 coding problems", xp: "+200 XP", date: "Earned", icon: <FaCode />, color: "brown", isEarned: userBadges.includes("Code Explorer") || userBadges.includes("4") },
     { id: 5, title: "Streak Starter", desc: "Maintain a 3-day streak", xp: "+75 XP", date: "Earned", icon: <FaFire />, color: "red", isEarned: (user?.streak || 0) >= 3 || userBadges.includes("Streak Starter") },
@@ -373,46 +373,61 @@ export default function BadgesPage() {
               </div>
 
               {/* 4 Stat Summary Cards Row */}
-              <div className="bpStatCardsRow">
-                <div className="bpStatCard">
-                  <div className="statIcon orange"><FaTrophy /></div>
-                  <div>
-                    <strong>18</strong>
-                    <span>Badges Earned</span>
-                    <div className="statBarTrack">
-                      <div className="statBarFill" style={{ width: "42%" }}></div>
+              {(() => {
+                const actuallyEarnedList = earnedBadges.filter(b => b.isEarned);
+                const totalEarnedCount = actuallyEarnedList.length;
+                const totalBadgesCount = earnedBadges.length + moreBadges.length;
+                const inProgressCount = totalEarnedCount > 0 && totalEarnedCount < totalBadgesCount ? 1 : 0;
+                const lockedCount = Math.max(0, totalBadgesCount - totalEarnedCount);
+                const totalXpFromBadges = actuallyEarnedList.reduce((sum, b) => {
+                  const match = (b.xp || "").match(/\d+/);
+                  return sum + (match ? parseInt(match[0], 10) : 0);
+                }, 0);
+                const earnedPct = Math.round((totalEarnedCount / totalBadgesCount) * 100);
+
+                return (
+                  <div className="bpStatCardsRow">
+                    <div className="bpStatCard">
+                      <div className="statIcon orange"><FaTrophy /></div>
+                      <div>
+                        <strong>{totalEarnedCount}</strong>
+                        <span>Badges Earned</span>
+                        <div className="statBarTrack">
+                          <div className="statBarFill" style={{ width: `${earnedPct}%` }}></div>
+                        </div>
+                        <span className="statSub">Out of {totalBadgesCount}</span>
+                      </div>
                     </div>
-                    <span className="statSub">Out of 42</span>
-                  </div>
-                </div>
 
-                <div className="bpStatCard">
-                  <div className="statIcon blue"><FaFire /></div>
-                  <div>
-                    <strong>3</strong>
-                    <span>In Progress</span>
-                    <span className="statSubText">Keep it up!</span>
-                  </div>
-                </div>
+                    <div className="bpStatCard">
+                      <div className="statIcon blue"><FaFire /></div>
+                      <div>
+                        <strong>{inProgressCount}</strong>
+                        <span>In Progress</span>
+                        <span className="statSubText">{totalEarnedCount === 0 ? "Start a lesson!" : "Keep it up!"}</span>
+                      </div>
+                    </div>
 
-                <div className="bpStatCard">
-                  <div className="statIcon purple"><FaLock /></div>
-                  <div>
-                    <strong>21</strong>
-                    <span>Locked</span>
-                    <span className="statSubText">Keep learning!</span>
-                  </div>
-                </div>
+                    <div className="bpStatCard">
+                      <div className="statIcon purple"><FaLock /></div>
+                      <div>
+                        <strong>{lockedCount}</strong>
+                        <span>Locked</span>
+                        <span className="statSubText">Keep learning!</span>
+                      </div>
+                    </div>
 
-                <div className="bpStatCard">
-                  <div className="statIcon green"><FaGem /></div>
-                  <div>
-                    <strong>3200</strong>
-                    <span>Total XP from Badges</span>
-                    <span className="statSubText">Amazing!</span>
+                    <div className="bpStatCard">
+                      <div className="statIcon green"><FaGem /></div>
+                      <div>
+                        <strong>{totalXpFromBadges}</strong>
+                        <span>Total XP from Badges</span>
+                        <span className="statSubText">{totalEarnedCount === 0 ? "Earn badges!" : "Amazing!"}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* 2-Column Main Workspace */}
               <div className="bpGridContainer">

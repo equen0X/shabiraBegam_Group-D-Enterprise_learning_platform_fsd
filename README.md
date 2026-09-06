@@ -72,7 +72,6 @@ Enterprise Learning Platform helps students become industry-ready while providin
 ## 💼 Workforce Portal
 
 - Workforce Dashboard
-<<<<<<< HEAD
 - Recruiter Portal
 - Job Posting
 - Candidate Management
@@ -83,13 +82,10 @@ Enterprise Learning Platform helps students become industry-ready while providin
 - Service Catalog
 - Talent Management
 - Candidate Evaluation
-=======
 - Assessments
 - Certificates
 - Promotion Flowchart
 - Leaves and Attendance
-- AI Career Coach
->>>>>>> 3053f30175176ab6205beb144ba38fb430d99ace
 
 ---
 

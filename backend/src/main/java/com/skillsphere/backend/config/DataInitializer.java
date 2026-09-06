@@ -72,6 +72,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         // Seed default test users
         createTestUserIfMissing("sroy", "S Roy", "sroy@gmail.com", "1234", "STUDENT");
+        createTestUserIfMissing("student_demo", "Student Demo", "student@gmail.com", "1234", "STUDENT");
         createTestUserIfMissing("student", "Student Demo", "student@skillsphere.com", "1234", "STUDENT");
         createTestUserIfMissing("employee", "Employee Demo", "employee@skillsphere.com", "1234", "EMPLOYEE");
         createTestUserIfMissing("manager", "Manager Demo", "manager@company.com", "1234", "EMPLOYEE");
@@ -225,6 +226,10 @@ public class DataInitializer implements CommandLineRunner {
             user.setRole(role);
             user.setProvider("LOCAL");
             user.setIsActive(true);
+            user.setXp(0);
+            user.setStreak(0);
+            user.setLongestStreak(0);
+            user.setTotalStudyTime(0);
             user.setLastLoginAt(LocalDateTime.now());
             userRepository.save(user);
             System.out.println("✅ DataInitializer: Created test user -> " + email);

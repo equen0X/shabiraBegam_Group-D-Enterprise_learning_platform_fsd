@@ -86,8 +86,6 @@ export default function StudentHome() {
 
   const userKey = user?.email || user?.username || "default";
 
-  const isDemoUser = userKey === "soumitriroy@gmail.com" || userKey === "soumitriroy" || userKey === "default" || user?.isDemo;
-
   // Unified enrolled courses calculation
   const getUnifiedEnrolledCourseIds = () => {
     let authList = (enrolledCourses || []).map(id => id.toString());
@@ -101,14 +99,14 @@ export default function StudentHome() {
     } catch (e) {}
     let dbList = Array.isArray(user?.enrolled_courses) ? user.enrolled_courses.map(id => id.toString()) : [];
     const combined = Array.from(new Set([...authList, ...localList, ...dbList]));
-    return combined.length > 0 ? combined : (isDemoUser ? ["1", "2"] : []);
+    return combined;
   };
 
   const activeEnrolledIds = getUnifiedEnrolledCourseIds();
   const userEnrolledCount = activeEnrolledIds.length;
 
   // Real Dynamic Earned Certificates Count from database
-  const [earnedCertsCount, setEarnedCertsCount] = useState(isDemoUser ? 1 : 0);
+  const [earnedCertsCount, setEarnedCertsCount] = useState(0);
 
   useEffect(() => {
     const fetchClaimedCerts = async () => {
@@ -124,17 +122,17 @@ export default function StudentHome() {
           setEarnedCertsCount(data.certificates.length);
         } else {
           const local = localStorage.getItem(`skillsphere_earned_certs_${userKey}`);
-          const parsed = local ? JSON.parse(local) : (isDemoUser ? ["react_"] : []);
+          const parsed = local ? JSON.parse(local) : [];
           setEarnedCertsCount(parsed.length);
         }
       } catch (err) {
         const local = localStorage.getItem(`skillsphere_earned_certs_${userKey}`);
-        const parsed = local ? JSON.parse(local) : (isDemoUser ? ["react_"] : []);
+        const parsed = local ? JSON.parse(local) : [];
         setEarnedCertsCount(parsed.length);
       }
     };
     fetchClaimedCerts();
-  }, [user, userKey, isDemoUser]);
+  }, [user, userKey]);
 
   // Real Dynamic Badges Earned Count
   const localEarnedBadges = (user?.badges && user.badges.length > 0)
@@ -142,15 +140,15 @@ export default function StudentHome() {
     : (() => {
         try {
           const stored = localStorage.getItem(`skillsphere_earned_badges_${userKey}`);
-          return stored ? JSON.parse(stored) : (isDemoUser ? Array.from({ length: 18 }) : []);
+          return stored ? JSON.parse(stored) : [];
         } catch (e) {
-          return isDemoUser ? Array.from({ length: 18 }) : [];
+          return [];
         }
       })();
   const earnedBadgesCount = localEarnedBadges.length;
 
   const userName = user?.full_name || user?.name || user?.username || "Learner";
-  const currentXp = xp ?? user?.xp ?? (isDemoUser ? 1500 : 0);
+  const currentXp = xp ?? user?.xp ?? 0;
   const level = Math.floor(currentXp / 2000) + 1;
   const xpInCurrentLevel = currentXp % 2000;
   const xpToNext = 2000 - xpInCurrentLevel;
@@ -184,7 +182,7 @@ export default function StudentHome() {
       const doneTopics = (completedTopics || []).filter(id => typeof id === 'string' && id.startsWith(c.topicPrefix)).length;
       const doneSub = (completedSubLessonIds || []).filter(id => typeof id === 'string' && (id.startsWith(c.topicPrefix) || (c.id === 2 && !id.startsWith("py-") && !id.startsWith("node-") && !id.startsWith("ui-")))).length;
       const totalDone = doneTopics + doneSub;
-      const initialDone = totalDone > 0 ? totalDone : (isDemoUser ? (c.id === 2 ? 7 : c.id === 1 ? 5 : c.id === 3 ? 4 : 3) : 0);
+      const initialDone = totalDone;
       const pct = Math.min(100, Math.round((initialDone / c.lessons) * 100));
       return { ...c, done: initialDone, pct };
     });

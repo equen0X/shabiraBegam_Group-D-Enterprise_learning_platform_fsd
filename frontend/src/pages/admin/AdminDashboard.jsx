@@ -15,9 +15,12 @@ export default function AdminDashboard() {
     logoutAdmin, courses, addCourse, updateCourse, deleteCourse, 
     users, addStudent, toggleStudentStatus, deleteStudent, 
     workforce, addWorkforce, changeWorkforceStatus, 
+    allRegisteredUsers,
     certificates, addCertificate, deleteCertificate,
     pendingCourseRequests, approveCourseRequest, rejectCourseRequest, refreshPendingRequests,
-    leaveRequests, approveLeaveRequest, rejectLeaveRequest, refreshLeaveRequests
+    leaveRequests, approveLeaveRequest, rejectLeaveRequest, refreshLeaveRequests,
+    getCourseEnrolledStudents,
+    refreshData
   } = useAdmin();
   
   const navigate = useNavigate();
@@ -35,9 +38,73 @@ export default function AdminDashboard() {
   const [showIssueCert, setShowIssueCert] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [selectedEnrolledCourse, setSelectedEnrolledCourse] = useState(null); // { course, students }
   
   // Dropdown menus for rows
   const [activeRowMenu, setActiveRowMenu] = useState(null); // { type: 'student'|'workforce', id: number }
+
+  // Format date helper
+  const formatDate = (dateStr) => {
+    try {
+      const d = dateStr ? new Date(dateStr) : new Date();
+      const validDate = isNaN(d.getTime()) ? new Date() : d;
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${months[validDate.getMonth()]} ${validDate.getDate()}, ${validDate.getFullYear()}`;
+    } catch {
+      return "Recently";
+    }
+  };
+
+  // Helper to count enrolled courses for a given student
+  const getStudentEnrolledCount = (u) => {
+    if (!u) return 0;
+    const courseIds = new Set();
+    const raw = u.enrolledCourses ?? u.enrolled_courses;
+    if (raw) {
+      if (Array.isArray(raw)) {
+        raw.forEach(c => c && courseIds.add(c.toString().trim()));
+      } else if (typeof raw === 'string') {
+        const trimmed = raw.trim();
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) parsed.forEach(c => c && courseIds.add(c.toString().trim()));
+          } catch (e) {}
+        }
+        if (courseIds.size === 0 && trimmed) {
+          trimmed.split(',').forEach(c => {
+            if (c.trim()) courseIds.add(c.trim());
+          });
+        }
+      }
+    }
+    const uEmail = u.email || u.username;
+    if (uEmail) {
+      const cleanEmail = uEmail.toLowerCase();
+      const keys = [
+        `enrolledCourses_${uEmail}`,
+        `enrolledCourses_${cleanEmail}`,
+        `skillsphere_enrolled_courses_${uEmail}`,
+        `skillsphere_enrolled_courses_${cleanEmail}`,
+        `enrolled_courses_${uEmail}`,
+        `enrolled_courses_${cleanEmail}`
+      ];
+      keys.forEach(k => {
+        try {
+          const val = localStorage.getItem(k);
+          if (val) {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) parsed.forEach(c => c && courseIds.add(c.toString().trim()));
+          }
+        } catch (e) {}
+      });
+    }
+    return courseIds.size;
+  };
+
+  // Sorted users (newest registered students and workforce first)
+  const sortedStudents = [...users].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || b.id - a.id);
+  const sortedWorkforce = [...workforce].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || b.id - a.id);
 
   // Service Bookings State (for Admin Dashboard)
   const [adminServiceBookings, setAdminServiceBookings] = useState(() => {
@@ -70,7 +137,7 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  // Notifications state — merge static + live pending approval notifications + leave notifications
+  // Notifications state — merge static + live registrations + live pending approval notifications + leave notifications
   const [baseNotifications] = useState([
     { id: 1, text: "Aarav Sharma completed Frontend System Design", time: "10 mins ago", read: false },
     { id: 2, text: "New registration request: Frank Mentor (Workforce)", time: "1 hour ago", read: false },
@@ -98,7 +165,28 @@ export default function AdminDashboard() {
       isLeaveApproval: true
     }));
 
-  const notifications = [...pendingApprovalNotifs, ...pendingLeaveNotifs, ...baseNotifications.map(n => ({ ...n, read: readIds.includes(n.id) }))];
+  // Real-time notifications for newly registered students and workforce
+  const studentNotifs = sortedStudents.slice(0, 3).map(u => ({
+    id: `student-reg-${u.id}`,
+    text: `New student registration: ${u.name} (${u.email})`,
+    time: formatDate(u.createdAt),
+    read: readIds.includes(`student-reg-${u.id}`)
+  }));
+
+  const workforceNotifs = sortedWorkforce.slice(0, 3).map(w => ({
+    id: `wf-reg-${w.id}`,
+    text: `New workforce registration: ${w.name} (${w.email} - ${w.role})`,
+    time: formatDate(w.createdAt),
+    read: readIds.includes(`wf-reg-${w.id}`)
+  }));
+
+  const notifications = [
+    ...pendingApprovalNotifs,
+    ...pendingLeaveNotifs,
+    ...studentNotifs,
+    ...workforceNotifs,
+    ...baseNotifications.map(n => ({ ...n, read: readIds.includes(n.id) }))
+  ];
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -117,18 +205,6 @@ export default function AdminDashboard() {
     window.addEventListener('click', handleOutsideClick);
     return () => window.removeEventListener('click', handleOutsideClick);
   }, []);
-
-  // Format date helper
-  const formatDate = (dateStr) => {
-    try {
-      const d = dateStr ? new Date(dateStr) : new Date();
-      if (isNaN(d.getTime())) return formatDate(null);
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-    } catch {
-      return formatDate(null);
-    }
-  };
 
   // Today's date for the header
   const todayLabel = formatDate(null);
@@ -379,16 +455,31 @@ export default function AdminDashboard() {
                     Here's what's happening on your platform today.
                   </p>
                 </div>
-                {/* Date Dropdown */}
-                <button style={{
-                  background: '#FFFFFF', border: '1px solid #F3EBE1', padding: '10px 18px',
-                  borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px',
-                  fontSize: '13.5px', fontWeight: '750', color: '#1E1B18', cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.01)'
-                }}>
-                  <FiCalendar style={{ color: '#F9572A' }} />
-                  {todayLabel}
-                </button>
+                {/* Date and Refresh Row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button 
+                    onClick={() => refreshData && refreshData()}
+                    title="Refresh all admin data and registrations"
+                    style={{
+                      background: '#FFFFFF', border: '1px solid #F3EBE1', padding: '10px 16px',
+                      borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px',
+                      fontSize: '13.5px', fontWeight: '750', color: '#1E1B18', cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.01)', transition: 'all 0.2s'
+                    }}
+                  >
+                    <FiRefreshCw style={{ color: '#F9572A' }} />
+                    Refresh
+                  </button>
+                  <button style={{
+                    background: '#FFFFFF', border: '1px solid #F3EBE1', padding: '10px 18px',
+                    borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px',
+                    fontSize: '13.5px', fontWeight: '750', color: '#1E1B18', cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.01)'
+                  }}>
+                    <FiCalendar style={{ color: '#F9572A' }} />
+                    {todayLabel}
+                  </button>
+                </div>
               </div>
 
               {/* KPI Cards Row */}
@@ -441,7 +532,7 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    {users.slice(0, 5).map(student => (
+                    {sortedStudents.slice(0, 5).map(student => (
                       <div 
                         key={student.id} 
                         style={{
@@ -502,7 +593,7 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    {workforce.slice(0, 5).map(wf => (
+                    {sortedWorkforce.slice(0, 5).map(wf => (
                       <div 
                         key={wf.id} 
                         style={{
@@ -598,19 +689,32 @@ export default function AdminDashboard() {
                     <tr style={{ background: '#FAF8F5', color: '#64748B', fontSize: '11px', textTransform: 'uppercase', fontWeight: '800', borderBottom: '1px solid #F3EBE1' }}>
                       <th style={{ padding: '16px 20px' }}>ID</th>
                       <th style={{ padding: '16px 20px' }}>Name / Email</th>
+                      <th style={{ padding: '16px 20px' }}>Courses Enrolled</th>
                       <th style={{ padding: '16px 20px' }}>Registration Date</th>
                       <th style={{ padding: '16px 20px' }}>Status</th>
                       <th style={{ padding: '16px 20px', textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users
+                    {sortedStudents
                       .map(u => (
                         <tr key={u.id} style={{ borderBottom: '1px solid #F3EBE1' }}>
                           <td style={{ padding: '16px 20px', color: '#94A3B8', fontWeight: '600' }}>#{u.id}</td>
                           <td style={{ padding: '16px 20px' }}>
                             <div style={{ fontWeight: '750', color: '#1E1B18' }}>{u.name}</div>
                             <div style={{ fontSize: '12px', color: '#64748B' }}>{u.email}</div>
+                          </td>
+                          <td style={{ padding: '16px 20px' }}>
+                            <span style={{
+                              background: getStudentEnrolledCount(u) > 0 ? '#ECFDF5' : '#F1F5F9',
+                              color: getStudentEnrolledCount(u) > 0 ? '#10B981' : '#64748B',
+                              padding: '4px 10px',
+                              borderRadius: '12px',
+                              fontSize: '11.5px',
+                              fontWeight: '750'
+                            }}>
+                              {getStudentEnrolledCount(u)} course{getStudentEnrolledCount(u) === 1 ? '' : 's'}
+                            </span>
                           </td>
                           <td style={{ padding: '16px 20px', color: '#64748B', fontWeight: '600' }}>{formatDate(u.createdAt)}</td>
                           <td style={{ padding: '16px 20px' }}>
@@ -677,7 +781,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {workforce
+                    {sortedWorkforce
                       .map(w => (
                         <tr key={w.id} style={{ borderBottom: '1px solid #F3EBE1' }}>
                           <td style={{ padding: '16px 20px', color: '#94A3B8', fontWeight: '600' }}>#{w.id}</td>
@@ -720,6 +824,9 @@ export default function AdminDashboard() {
               deleteCourse={deleteCourse} 
               pendingCourseRequests={pendingCourseRequests}
               users={users}
+              workforce={workforce}
+              allRegisteredUsers={allRegisteredUsers}
+              getCourseEnrolledStudents={getCourseEnrolledStudents}
               editingCourse={editingCourse}
               setEditingCourse={setEditingCourse}
               showAddCourse={showAddCourse}
@@ -1451,11 +1558,23 @@ function ProgressTrack({ name, pct, count, color }) {
 }
 
 // Course Management Sub-Tab implementation
-function CourseManagement({ 
-  courses, addCourse, updateCourse, deleteCourse,
-  pendingCourseRequests, users = [],
-  editingCourse, setEditingCourse, showAddCourse, setShowAddCourse 
-}) {
+function CourseManagement(props) {
+  const adminCtx = useAdmin();
+  const courses = props.courses ?? adminCtx.courses ?? [];
+  const addCourse = props.addCourse ?? adminCtx.addCourse;
+  const updateCourse = props.updateCourse ?? adminCtx.updateCourse;
+  const deleteCourse = props.deleteCourse ?? adminCtx.deleteCourse;
+  const pendingCourseRequests = props.pendingCourseRequests ?? adminCtx.pendingCourseRequests ?? [];
+  const users = props.users ?? adminCtx.users ?? [];
+  const workforce = props.workforce ?? adminCtx.workforce ?? [];
+  const allRegisteredUsers = props.allRegisteredUsers ?? adminCtx.allRegisteredUsers ?? [];
+  const getCourseEnrolledStudents = props.getCourseEnrolledStudents ?? adminCtx.getCourseEnrolledStudents;
+  const editingCourse = props.editingCourse;
+  const setEditingCourse = props.setEditingCourse;
+  const showAddCourse = props.showAddCourse;
+  const setShowAddCourse = props.setShowAddCourse;
+
+  const [selectedEnrolledCourse, setSelectedEnrolledCourse] = useState(null);
 
   // If the parent opened the modal externally (e.g. Quick Action), initialize a blank course
   React.useEffect(() => {
@@ -1521,53 +1640,14 @@ function CourseManagement({
           <tbody>
             {courses
               .map(course => {
-                const courseIdStr = course.id?.toString();
-                const courseTitleLower = (course.title || '').toLowerCase().trim();
-
-                // 1. Pending requests for this course
-                const pendingCount = (pendingCourseRequests || []).filter(r => {
-                  if (r.status !== 'pending') return false;
-                  const matchId = r.courseId && r.courseId.toString() === courseIdStr;
-                  const matchTitle = r.courseTitle && (
-                    r.courseTitle.toLowerCase().trim() === courseTitleLower ||
-                    r.courseTitle.toLowerCase().includes(courseTitleLower) ||
-                    courseTitleLower.includes(r.courseTitle.toLowerCase().trim())
-                  );
-                  return matchId || matchTitle;
-                }).length;
-
-                // 2. Approved requests for this course
-                const approvedReqs = (pendingCourseRequests || []).filter(r => {
-                  if (r.status !== 'approved') return false;
-                  const matchId = r.courseId && r.courseId.toString() === courseIdStr;
-                  const matchTitle = r.courseTitle && (
-                    r.courseTitle.toLowerCase().trim() === courseTitleLower ||
-                    r.courseTitle.toLowerCase().includes(courseTitleLower) ||
-                    courseTitleLower.includes(r.courseTitle.toLowerCase().trim())
-                  );
-                  return matchId || matchTitle;
-                });
-
-                // 3. Registered students enrolled in this course
-                const studentEnrollments = (users || []).filter(u => {
-                  const uEmail = u.email || u.username;
-                  if (!uEmail) return false;
-                  try {
-                    const rawLocal = localStorage.getItem(`enrolledCourses_${uEmail}`) || localStorage.getItem(`skillsphere_enrolled_courses_${uEmail}`);
-                    if (rawLocal) {
-                      const parsed = JSON.parse(rawLocal);
-                      if (Array.isArray(parsed) && (parsed.includes(courseIdStr) || parsed.includes(course.id))) return true;
-                    }
-                  } catch (e) {}
-                  if (Array.isArray(u.enrolled_courses) && (u.enrolled_courses.includes(courseIdStr) || u.enrolled_courses.includes(course.id))) return true;
-                  return false;
-                });
-
-                const enrolledStudentSet = new Set();
-                approvedReqs.forEach(r => enrolledStudentSet.add(r.studentEmail || r.studentName || r.id));
-                studentEnrollments.forEach(u => enrolledStudentSet.add(u.email || u.id));
-
-                const totalEnrolled = enrolledStudentSet.size;
+                const candidateLearners = [
+                  ...(allRegisteredUsers && allRegisteredUsers.length > 0 ? allRegisteredUsers : []),
+                  ...(users || []),
+                  ...(workforce || [])
+                ];
+                const { totalEnrolled, enrolledStudents, pendingCount } = getCourseEnrolledStudents
+                  ? getCourseEnrolledStudents(course, candidateLearners, pendingCourseRequests)
+                  : { totalEnrolled: 0, enrolledStudents: [], pendingCount: 0 };
 
                 return (
                 <tr key={course.id} style={{ borderBottom: '1px solid #F3EBE1' }}>
@@ -1588,7 +1668,28 @@ function CourseManagement({
                   </td>
                   <td style={{ padding: '16px 20px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                      <span style={{ fontSize: '13.5px', fontWeight: '850', color: '#10B981' }}>{totalEnrolled} enrolled</span>
+                      <span 
+                        style={{ 
+                          fontSize: '13.5px', 
+                          fontWeight: '850', 
+                          color: totalEnrolled > 0 ? '#10B981' : '#64748B',
+                          cursor: totalEnrolled > 0 ? 'pointer' : 'default',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                        title={totalEnrolled > 0 ? enrolledStudents.map(s => `${s.name} (${s.email})`).join('\n') : 'No registered learners enrolled yet'}
+                        onClick={() => {
+                          if (totalEnrolled > 0) {
+                            setSelectedEnrolledCourse({ course, students: enrolledStudents });
+                          }
+                        }}
+                      >
+                        {totalEnrolled} enrolled
+                        {totalEnrolled > 0 && (
+                          <span style={{ fontSize: '11px', color: '#10B981', opacity: 0.8, textDecoration: 'underline' }}>(view)</span>
+                        )}
+                      </span>
                       {pendingCount > 0 && (
                         <span style={{ fontSize: '11px', fontWeight: '750', color: '#F59E0B' }}>⏳ {pendingCount} pending approval</span>
                       )}
@@ -1603,6 +1704,67 @@ function CourseManagement({
           </tbody>
         </table>
       </div>
+
+      {/* Enrolled Learners Details Modal */}
+      {selectedEnrolledCourse && (
+        <ModalWrapper 
+          title={`Enrolled Learners: ${selectedEnrolledCourse.course?.title}`} 
+          onClose={() => setSelectedEnrolledCourse(null)}
+        >
+          <div style={{ maxHeight: '420px', overflowY: 'auto' }}>
+            <p style={{ margin: '0 0 14px', fontSize: '13.5px', color: '#64748B' }}>
+              Total of <strong style={{ color: '#10B981' }}>{selectedEnrolledCourse.students?.length}</strong> registered learner(s) currently enrolled in this program:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {selectedEnrolledCourse.students?.map((stu, idx) => (
+                <div 
+                  key={stu.id || idx} 
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '11px 15px', 
+                    background: '#FAF8F5', 
+                    borderRadius: '10px', 
+                    border: '1px solid #F3EBE1' 
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: '750', fontSize: '13.5px', color: '#1E1B18' }}>{stu.name}</div>
+                    <div style={{ fontSize: '11.5px', color: '#64748B' }}>{stu.email}</div>
+                  </div>
+                  <span style={{ 
+                    fontSize: '11px', 
+                    fontWeight: '750', 
+                    background: (stu.role || '').toUpperCase() === 'STUDENT' ? '#EFF6FF' : '#FEF3C7', 
+                    color: (stu.role || '').toUpperCase() === 'STUDENT' ? '#2563EB' : '#D97706', 
+                    padding: '4px 10px', 
+                    borderRadius: '12px' 
+                  }}>
+                    {stu.role || 'STUDENT'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setSelectedEnrolledCourse(null)}
+                style={{ 
+                  padding: '9px 18px', 
+                  background: '#F9572A', 
+                  color: '#FFFFFF', 
+                  border: 'none', 
+                  borderRadius: '8px', 
+                  fontWeight: '750', 
+                  cursor: 'pointer' 
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </ModalWrapper>
+      )}
 
       {showAddCourse && editingCourse && (
         <ModalWrapper title={editingCourse.id ? 'Edit Course' : 'Create Course'} onClose={() => setShowAddCourse(false)}>

@@ -84,10 +84,10 @@ public class User {
     private String enrolledCourses = "";
 
     @Column(name = "streak")
-    private Integer streak = 1;
+    private Integer streak = 0;
 
     @Column(name = "longest_streak")
-    private Integer longestStreak = 1;
+    private Integer longestStreak = 0;
 
     @Column(name = "total_study_time")
     private Integer totalStudyTime = 0;

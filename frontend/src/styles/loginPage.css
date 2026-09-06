@@ -542,3 +542,74 @@
 [data-theme="dark"] .bottomAuthText {
   color: #94A3B8;
 }
+
+/* ── Inline Field Validation Styles ── */
+.inputWithIconWrapper.has-error input {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.inputWithIconWrapper.has-success input {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12) !important;
+}
+
+.fieldErrorMessage {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #DC2626;
+  margin-top: 4px;
+  animation: fieldFadeIn 0.2s ease-out;
+}
+
+.fieldDomainNotice {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #F9572A;
+  margin-top: 5px;
+  padding: 5px 9px;
+  background: #FFF0EB;
+  border: 1px solid #FAD6C8;
+  border-radius: 8px;
+  line-height: 1.35;
+}
+
+.fieldHelperText {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #64748B;
+  margin-top: 4px;
+}
+
+[data-theme="dark"] .inputWithIconWrapper.has-error input {
+  border-color: #F87171 !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2) !important;
+}
+
+[data-theme="dark"] .inputWithIconWrapper.has-success input {
+  border-color: #34D399 !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15) !important;
+}
+
+[data-theme="dark"] .fieldErrorMessage {
+  color: #F87171;
+}
+
+[data-theme="dark"] .fieldDomainNotice {
+  background: rgba(249, 87, 42, 0.15);
+  border-color: rgba(249, 87, 42, 0.3);
+  color: #FFA07A;
+}
+
+[data-theme="dark"] .fieldHelperText {
+  color: #94A3B8;
+}
+

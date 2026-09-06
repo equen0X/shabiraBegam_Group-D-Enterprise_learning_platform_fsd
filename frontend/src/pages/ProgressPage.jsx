@@ -298,19 +298,7 @@ export default function ProgressPage() {
       }
     });
 
-    const activeActivities = activities.slice(0, 5);
-
-    if (activeActivities.length < 5) {
-      const fallbacks = [
-        { title: "Node.js - Event Loop", heading: "Asynchronous I/O", type: "Completed Lesson", icon: <FaCheckCircle />, colorClass: "green", xp: "+20 XP", time: "Today, 10:30 AM" },
-        { title: "Arrays - Easy", heading: "CodeArena Problem", type: "Solved 2 Problems", icon: <FaCode />, colorClass: "purple", xp: "+40 XP", time: "Today, 09:15 AM" },
-        { title: "Build REST API", heading: "Course Assignment", type: "Submitted Assignment", icon: <FaFileAlt />, colorClass: "orange", xp: "+100 XP", time: "Yesterday, 08:45 PM" },
-        { title: "JavaScript Basics", heading: "Quick Quiz", type: "Quiz Completed", icon: <FaAward />, colorClass: "red", xp: "+25 XP", time: "Yesterday, 07:30 PM" },
-        { title: "Express.js - Routing", heading: "Completed Lesson", type: "Completed Lesson", icon: <FaBook />, colorClass: "blue", xp: "+20 XP", time: "Yesterday, 06:10 PM" }
-      ];
-      return [...activeActivities, ...fallbacks.slice(0, 5 - activeActivities.length)];
-    }
-    return activeActivities;
+    return activities.slice(0, 5);
   };
 
   const getXpDistribution = () => {
@@ -604,7 +592,7 @@ export default function ProgressPage() {
               <div>
                 <span className="lbl">Study Streak</span>
                 <strong>{user?.streak || 0} Days</strong>
-                <span className="streakBest">Best: {user?.longest_streak || 1} Days 🔥</span>
+                <span className="streakBest">Best: {user?.longest_streak ?? user?.longestStreak ?? 0} Days 🔥</span>
               </div>
             </div>
 
@@ -843,17 +831,23 @@ export default function ProgressPage() {
                 <div className="horizontalTimelineContainer">
                   <div className="timelineTrackLine"></div>
 
-                  {getRecentActivities().map((act, index) => (
-                    <div key={index} className="timelineNodeStep">
-                      <div className={`nodeCircle ${act.colorClass}`}>{act.icon}</div>
-                      <div className="nodeInfo">
-                        <h5>{act.type}</h5>
-                        <span>{act.title}</span>
-                        <span className="timeSub">{act.time}</span>
-                        <span className={`xpBadge ${act.colorClass}`}>{act.xp}</span>
-                      </div>
+                  {getRecentActivities().length === 0 ? (
+                    <div style={{ padding: "24px 16px", textAlign: "center", width: "100%", color: "var(--text-secondary)", fontSize: "13px" }}>
+                      No recent learning activities yet. Start learning a lesson or quiz to see your activity timeline!
                     </div>
-                  ))}
+                  ) : (
+                    getRecentActivities().map((act, index) => (
+                      <div key={index} className="timelineNodeStep">
+                        <div className={`nodeCircle ${act.colorClass}`}>{act.icon}</div>
+                        <div className="nodeInfo">
+                          <h5>{act.type}</h5>
+                          <span>{act.title}</span>
+                          <span className="timeSub">{act.time}</span>
+                          <span className={`xpBadge ${act.colorClass}`}>{act.xp}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
 
                 </div>
               </div>

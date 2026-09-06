@@ -108,7 +108,7 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> getUsers() {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("users", userRepository.findAll());
+        response.put("users", userRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")));
         return ResponseEntity.ok(response);
     }
 

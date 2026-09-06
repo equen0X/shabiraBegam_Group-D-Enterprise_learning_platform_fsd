@@ -22,10 +22,7 @@ export default function ComplaintRenewalTrackingPage() {
 
   const [tickets, setTickets] = useState([]);
 
-  const [renewals] = useState([
-    { id: 1, title: "JavaScript Fundamentals Certification", expiry: "2026-11-01", daysLeft: 88, status: "Action Required" },
-    { id: 2, title: "React Development Advanced Credentials", expiry: "2027-02-15", daysLeft: 195, status: "Active" }
-  ]);
+  const [renewals] = useState([]);
 
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketCategory, setTicketCategory] = useState("Course Error");
@@ -44,24 +41,16 @@ export default function ComplaintRenewalTrackingPage() {
   // Load tickets on mount
   useEffect(() => {
     const fetchTickets = async () => {
-      if (!authenticatedFetch) return;
       try {
-        const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/tickets`);
+        const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/tickets/my`);
         const data = await response.json();
         if (response.ok && data.success) {
           setTickets(data.tickets || []);
         } else {
-          // fallback static list
-          setTickets([
-            { id: "T-8891", ticketId: "T-8891", subject: "Unable to load Vite modules video in React path", category: "Video Issue", status: "Resolved", date: "2026-08-01" },
-            { id: "T-9923", ticketId: "T-9923", subject: "Certificate PDF download is blank on mobile Safari", category: "UI Bug", status: "Open", date: "2026-08-04" }
-          ]);
+          setTickets([]);
         }
       } catch (e) {
-        setTickets([
-          { id: "T-8891", ticketId: "T-8891", subject: "Unable to load Vite modules video in React path", category: "Video Issue", status: "Resolved", date: "2026-08-01" },
-          { id: "T-9923", ticketId: "T-9923", subject: "Certificate PDF download is blank on mobile Safari", category: "UI Bug", status: "Open", date: "2026-08-04" }
-        ]);
+        setTickets([]);
       }
     };
     fetchTickets();
@@ -247,26 +236,30 @@ export default function ComplaintRenewalTrackingPage() {
                 </p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {renewals.map((r) => (
-                    <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "var(--bg-secondary)", borderRadius: "10px", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "12px" }}>
-                      <div>
-                        <strong style={{ color: "var(--text-primary)", display: "block" }}>{r.title}</strong>
-                        <span style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginTop: "4px" }}>
-                          Expires: {r.expiry} ({r.daysLeft} days remaining)
-                        </span>
+                  {renewals.length === 0 ? (
+                    <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>No credential renewals scheduled yet.</p>
+                  ) : (
+                    renewals.map((r) => (
+                      <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "var(--bg-secondary)", borderRadius: "10px", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "12px" }}>
+                        <div>
+                          <strong style={{ color: "var(--text-primary)", display: "block" }}>{r.title}</strong>
+                          <span style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginTop: "4px" }}>
+                            Expires: {r.expiry} ({r.daysLeft} days remaining)
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <span style={{ fontSize: "11px", fontWeight: "bold", padding: "4px 8px", borderRadius: "4px", background: r.daysLeft <= 90 ? "#fee2e2" : "#dcfce7", color: r.daysLeft <= 90 ? "#b91c1c" : "#15803d" }}>
+                            {r.status}
+                          </span>
+                          {r.daysLeft <= 90 && (
+                            <button className="btnContinueCourse" onClick={() => navigate("/assessments")}>
+                              Schedule Exam
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "bold", padding: "4px 8px", borderRadius: "4px", background: r.daysLeft <= 90 ? "#fee2e2" : "#dcfce7", color: r.daysLeft <= 90 ? "#b91c1c" : "#15803d" }}>
-                          {r.status}
-                        </span>
-                        {r.daysLeft <= 90 && (
-                          <button className="btnContinueCourse" onClick={() => navigate("/assessments")}>
-                            Schedule Exam
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 

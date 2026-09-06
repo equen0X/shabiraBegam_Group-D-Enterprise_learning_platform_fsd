@@ -64,32 +64,35 @@ export default function TrackingDashboardPage() {
 
   // Map progress stats
   const trackCourses = COURSE_CATALOG.map(c => {
-    const doneCount = (completedTopics || []).filter(id => id.startsWith(c.topicPrefix)).length;
-    // Hardcode some demo details for demo users to look fully functional
-    const initialDone = doneCount > 0 ? doneCount : (c.id === 2 ? 7 : c.id === 1 ? 5 : c.id === 3 ? 4 : 0);
-    const pct = Math.min(100, Math.round((initialDone / c.lessons) * 100));
-    return { ...c, done: initialDone, pct };
+    const doneCount = (completedTopics || []).filter(id => typeof id === 'string' && id.startsWith(c.topicPrefix)).length;
+    const pct = Math.min(100, Math.round((doneCount / c.lessons) * 100));
+    return { ...c, done: doneCount, pct };
   });
 
+  const enrolledCourseIds = (enrolledCourses || []).map(id => id.toString());
   // Filter based on requested tracking items:
   // i) Courses Learning (progress > 0% and < 100%)
-  const learningCourses = trackCourses.filter(c => c.pct > 0 && c.pct < 100);
+  const learningCourses = trackCourses.filter(c => enrolledCourseIds.includes(c.id.toString()) && c.pct > 0 && c.pct < 100);
 
   // ii) Enrolled Courses (all active enrolled courses)
-  const enrolledList = trackCourses.filter(c => enrolledCourses?.includes(c.id.toString()) || c.pct > 0);
+  const enrolledList = trackCourses.filter(c => enrolledCourseIds.includes(c.id.toString()));
 
   // iii) Learning Paths (enrolled career pathways)
+  const feDone = (completedTopics || []).filter(id => typeof id === 'string' && (id.startsWith("react_") || id.startsWith("js_"))).length;
+  const fePct = Math.min(100, Math.round((feDone / 30) * 100));
+  const feMods = Math.min(6, Math.floor((fePct / 100) * 6));
+
+  const beDone = (completedTopics || []).filter(id => typeof id === 'string' && (id.startsWith("node_") || id.startsWith("springboot_"))).length;
+  const bePct = Math.min(100, Math.round((beDone / 25) * 100));
+  const beMods = Math.min(5, Math.floor((bePct / 100) * 5));
+
   const learningPaths = [
-    { id: 1, title: "Frontend Developer Path", progress: 65, completedModules: 4, totalModules: 6 },
-    { id: 2, title: "Backend Systems Architect Path", progress: 25, completedModules: 2, totalModules: 5 }
+    { id: 1, title: "Frontend Developer Path", progress: fePct, completedModules: feMods, totalModules: 6 },
+    { id: 2, title: "Backend Systems Architect Path", progress: bePct, completedModules: beMods, totalModules: 5 }
   ];
 
   // iv) Completed Courses (courses at 100%)
-  // For demo, we mark JS Fundamentals or React completed if pct === 100, or force JS as completed for aesthetic showcase
-  const completedList = trackCourses.map(c => {
-    if (c.id === 1) return { ...c, pct: 100, done: c.lessons }; // JS is fully completed in default view
-    return c;
-  }).filter(c => c.pct === 100);
+  const completedList = trackCourses.filter(c => c.pct === 100);
 
   return (
     <div className={`sdDashboardWrapper ${isDarkMode ? "dark-theme" : ""}`}>

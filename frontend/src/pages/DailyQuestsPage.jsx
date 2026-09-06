@@ -108,7 +108,7 @@ export default function DailyQuestsPage() {
             icon = <FaBolt />;
             color = "orange";
             desc = "Log in daily and build your streak streak!";
-            progressText = `${user?.streak || 1}/1`;
+            progressText = `${user?.streak || 0}/1`;
           } else if (q.id === 2) {
             icon = <FaCode />;
             color = "green";

@@ -17,7 +17,7 @@ import AppLogo from "../components/AppLogo";
 
 export default function CourseManagementPage() {
   const { user, xp, logout, themeMode, toggleTheme } = useAuth();
-  const { courses: adminCourses, pendingCourseRequests, users } = useAdmin();
+  const { courses: adminCourses, pendingCourseRequests, users, workforce, allRegisteredUsers, getCourseEnrolledStudents } = useAdmin();
   const navigate = useNavigate();
   const isDarkMode = themeMode === "dark";
 
@@ -188,50 +188,14 @@ export default function CourseManagementPage() {
                     </thead>
                     <tbody>
                       {courses.map((course) => {
-                        const courseIdStr = course.id?.toString();
-                        const courseTitleLower = (course.title || '').toLowerCase().trim();
-
-                        const pendingCount = (pendingCourseRequests || []).filter(r => {
-                          if (r.status !== 'pending') return false;
-                          const matchId = r.courseId && r.courseId.toString() === courseIdStr;
-                          const matchTitle = r.courseTitle && (
-                            r.courseTitle.toLowerCase().trim() === courseTitleLower ||
-                            r.courseTitle.toLowerCase().includes(courseTitleLower) ||
-                            courseTitleLower.includes(r.courseTitle.toLowerCase().trim())
-                          );
-                          return matchId || matchTitle;
-                        }).length;
-
-                        const approvedReqs = (pendingCourseRequests || []).filter(r => {
-                          if (r.status !== 'approved') return false;
-                          const matchId = r.courseId && r.courseId.toString() === courseIdStr;
-                          const matchTitle = r.courseTitle && (
-                            r.courseTitle.toLowerCase().trim() === courseTitleLower ||
-                            r.courseTitle.toLowerCase().includes(courseTitleLower) ||
-                            courseTitleLower.includes(r.courseTitle.toLowerCase().trim())
-                          );
-                          return matchId || matchTitle;
-                        });
-
-                        const studentEnrollments = (users || []).filter(u => {
-                          const uEmail = u.email || u.username;
-                          if (!uEmail) return false;
-                          try {
-                            const rawLocal = localStorage.getItem(`enrolledCourses_${uEmail}`) || localStorage.getItem(`skillsphere_enrolled_courses_${uEmail}`);
-                            if (rawLocal) {
-                              const parsed = JSON.parse(rawLocal);
-                              if (Array.isArray(parsed) && (parsed.includes(courseIdStr) || parsed.includes(course.id))) return true;
-                            }
-                          } catch (e) {}
-                          if (Array.isArray(u.enrolled_courses) && (u.enrolled_courses.includes(courseIdStr) || u.enrolled_courses.includes(course.id))) return true;
-                          return false;
-                        });
-
-                        const enrolledStudentSet = new Set();
-                        approvedReqs.forEach(r => enrolledStudentSet.add(r.studentEmail || r.studentName || r.id));
-                        studentEnrollments.forEach(u => enrolledStudentSet.add(u.email || u.id));
-
-                        const totalEnrolled = enrolledStudentSet.size;
+                        const candidateLearners = [
+                          ...(allRegisteredUsers && allRegisteredUsers.length > 0 ? allRegisteredUsers : []),
+                          ...(users || []),
+                          ...(workforce || [])
+                        ];
+                        const { totalEnrolled, pendingCount } = getCourseEnrolledStudents
+                          ? getCourseEnrolledStudents(course, candidateLearners, pendingCourseRequests)
+                          : { totalEnrolled: 0, pendingCount: 0 };
 
                         return (
                         <tr key={course.id} style={{ borderBottom: "1px solid var(--border-subtle)" }}>

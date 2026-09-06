@@ -241,42 +241,7 @@ export default function CodeArenaPage() {
   const [isExecuting, setIsExecuting] = useState(false);
 
   // Previous Submissions Database State
-  const [submissionsHistory, setSubmissionsHistory] = useState({
-    1: [
-      {
-        id: "sub_101",
-        timestamp: "10 mins ago",
-        lang: "Java 17",
-        status: "Accepted",
-        isPassed: true,
-        runtime: "0.02 sec",
-        memory: "14.8 MB",
-        code: `//{ Driver Code Starts\nimport java.util.*;\n\nclass Solution {\n    public int[] twoSum(int[] nums, int target) {\n        Map<Integer, Integer> map = new HashMap<>();\n        for (int i = 0; i < nums.length; i++) {\n          int diff = target - nums[i];\n          if (map.containsKey(diff)) return new int[]{map.get(diff), i};\n          map.put(nums[i], i);\n        }\n        return new int[]{};\n    }\n}`
-      },
-      {
-        id: "sub_102",
-        timestamp: "1 hour ago",
-        lang: "Python 3.10",
-        status: "Compilation Error",
-        isPassed: false,
-        runtime: "0.00 sec",
-        memory: "0 KB",
-        code: `# User Function Template for Python 3\nclass Solution:\n    def twoSum(self, nums, target):\n        for i in range(len(nums)):\n            if nums[i] + nums[j] == target\n                return [i, j]`
-      }
-    ],
-    2: [
-      {
-        id: "sub_201",
-        timestamp: " Yesterday",
-        lang: "JavaScript",
-        status: "Accepted",
-        isPassed: true,
-        runtime: "0.04 sec",
-        memory: "15.1 MB",
-        code: `function addTwoNumbers(l1, l2) {\n  let dummy = new ListNode(0), curr = dummy, carry = 0;\n  while (l1 || l2 || carry) {\n    let sum = (l1 ? l1.val : 0) + (l2 ? l2.val : 0) + carry;\n    carry = Math.floor(sum / 10);\n    curr.next = new ListNode(sum % 10);\n    curr = curr.next;\n    if (l1) l1 = l1.next;\n    if (l2) l2 = l2.next;\n  }\n  return dummy.next;\n}`
-      }
-    ]
-  });
+  const [submissionsHistory, setSubmissionsHistory] = useState({});
 
   // Solved & Bookmarked State
   const [problems, setProblems] = useState(MASTER_PROBLEMS);
@@ -705,7 +670,7 @@ export default function CodeArenaPage() {
 
             <div className="caHeaderRightStats">
               <div className="caStreakBadge">
-                <FaFire color="#F9572A" /> <span>0 Day Streak</span>
+                <FaFire color="#F9572A" /> <span>{user?.streak || 0} Day Streak</span>
               </div>
               <div className="caXpBadge">
                 <FaStar color="#F59E0B" /> <span>{userXp.toLocaleString()} XP</span>

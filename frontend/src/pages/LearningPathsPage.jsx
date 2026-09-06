@@ -255,8 +255,7 @@ export default function LearningPathsPage() {
     } catch (e) {}
     let dbList = Array.isArray(user?.enrolled_courses) ? user.enrolled_courses.map(id => id.toString()) : [];
     const combined = Array.from(new Set([...authList, ...localList, ...dbList]));
-    const isDemoUser = userKey === "soumitriroy@gmail.com" || userKey === "soumitriroy" || userKey === "alex_morgan" || userKey === "default" || user?.isDemo;
-    return combined.length > 0 ? combined : (isDemoUser ? ["1", "2"] : []);
+    return combined;
   };
 
   const activeEnrolledIds = getUnifiedEnrolledCourseIds();

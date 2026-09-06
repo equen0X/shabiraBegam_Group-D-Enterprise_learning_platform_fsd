@@ -182,25 +182,25 @@ const initialCoursesData = [
 ];
 
 const initialUsersData = [
-  { id: 101, name: "Aarav Sharma", email: "aarav@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-20T10:00:00" },
-  { id: 102, name: "Priya Patel", email: "priya@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-20T09:15:00" },
-  { id: 103, name: "Rohan Verma", email: "rohan@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-19T14:30:00" },
-  { id: 104, name: "Sneha Iyer", email: "sneha@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-19T11:00:00" },
-  { id: 105, name: "Karan Mehta", email: "karan@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-18T16:45:00" },
-  { id: 106, name: "Alice Johnson", email: "alice@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-15T08:00:00" },
-  { id: 107, name: "Bob Smith", email: "bob@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-14T12:00:00" },
-  { id: 108, name: "Charlie Davis", email: "charlie@example.com", role: "STUDENT", status: "Blocked", createdAt: "2025-05-12T15:20:00" }
+  { id: 101, name: "Aarav Sharma", email: "aarav@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-20T10:00:00", enrolledCourses: "1,2,7" },
+  { id: 102, name: "Priya Patel", email: "priya@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-20T09:15:00", enrolledCourses: "2,3,6" },
+  { id: 103, name: "Rohan Verma", email: "rohan@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-19T14:30:00", enrolledCourses: "1,5" },
+  { id: 104, name: "Sneha Iyer", email: "sneha@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-19T11:00:00", enrolledCourses: "2,4,12" },
+  { id: 105, name: "Karan Mehta", email: "karan@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-18T16:45:00", enrolledCourses: "3,6,10" },
+  { id: 106, name: "Alice Johnson", email: "alice@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-15T08:00:00", enrolledCourses: "2,4" },
+  { id: 107, name: "Bob Smith", email: "bob@example.com", role: "STUDENT", status: "Active", createdAt: "2025-05-14T12:00:00", enrolledCourses: "1,4" },
+  { id: 108, name: "Charlie Davis", email: "charlie@example.com", role: "STUDENT", status: "Blocked", createdAt: "2025-05-12T15:20:00", enrolledCourses: "3" }
 ];
 
 const initialWorkforceData = [
-  { id: 201, name: "Alex Vance", email: "alex@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Engineering", createdAt: "2025-05-20T10:30:00" },
-  { id: 202, name: "Neha Singh", email: "neha@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Product", createdAt: "2025-05-20T10:30:00" },
-  { id: 203, name: "Vikram Joshi", email: "vikram@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Design", createdAt: "2025-05-20T08:45:00" },
-  { id: 204, name: "Riya Sharma", email: "riya@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Operations", createdAt: "2025-05-19T17:15:00" },
-  { id: 205, name: "Rahul Kumar", email: "rahul@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Engineering", createdAt: "2025-05-19T13:10:00" },
-  { id: 206, name: "Pooja Nair", email: "pooja@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "HR", createdAt: "2025-05-18T15:00:00" },
-  { id: 207, name: "Eve Trainer", email: "eve@skillsphere.com", role: "MANAGER", status: "Approved", dept: "Engineering", createdAt: "2025-05-15T11:00:00" },
-  { id: 208, name: "Frank Mentor", email: "frank@skillsphere.com", role: "EMPLOYEE", status: "Pending", dept: "Support", createdAt: "2025-05-14T09:30:00" }
+  { id: 201, name: "Alex Vance", email: "alex@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Engineering", createdAt: "2025-05-20T10:30:00", enrolledCourses: "2,4,3,6,10" },
+  { id: 202, name: "Neha Singh", email: "neha@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Product", createdAt: "2025-05-20T10:30:00", enrolledCourses: "2,4,3" },
+  { id: 203, name: "Vikram Joshi", email: "vikram@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Design", createdAt: "2025-05-20T08:45:00", enrolledCourses: "4,7" },
+  { id: 204, name: "Riya Sharma", email: "riya@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Operations", createdAt: "2025-05-19T17:15:00", enrolledCourses: "2,6" },
+  { id: 205, name: "Rahul Kumar", email: "rahul@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "Engineering", createdAt: "2025-05-19T13:10:00", enrolledCourses: "1,5,10" },
+  { id: 206, name: "Pooja Nair", email: "pooja@skillsphere.com", role: "EMPLOYEE", status: "Approved", dept: "HR", createdAt: "2025-05-18T15:00:00", enrolledCourses: "" },
+  { id: 207, name: "Eve Trainer", email: "eve@skillsphere.com", role: "MANAGER", status: "Approved", dept: "Engineering", createdAt: "2025-05-15T11:00:00", enrolledCourses: "2,4,3,6,10" },
+  { id: 208, name: "Frank Mentor", email: "frank@skillsphere.com", role: "EMPLOYEE", status: "Pending", dept: "Support", createdAt: "2025-05-14T09:30:00", enrolledCourses: "" }
 ];
 
 const initialCertificatesData = [
@@ -236,14 +236,44 @@ export function AdminProvider({ children }) {
   });
   
   const [users, setUsers] = useState(() => {
-    const local = localStorage.getItem('admin_users');
-    return local ? JSON.parse(local) : initialUsersData;
+    try {
+      const local = localStorage.getItem('admin_users');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(u => {
+            if (u.enrolledCourses === undefined) {
+              const fallback = initialUsersData.find(iu => iu.email === u.email);
+              if (fallback?.enrolledCourses) return { ...u, enrolledCourses: fallback.enrolledCourses };
+            }
+            return u;
+          });
+        }
+      }
+    } catch (e) {}
+    return initialUsersData;
   });
 
   const [workforce, setWorkforce] = useState(() => {
-    const local = localStorage.getItem('admin_workforce');
-    return local ? JSON.parse(local) : initialWorkforceData;
+    try {
+      const local = localStorage.getItem('admin_workforce');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(w => {
+            if (w.enrolledCourses === undefined) {
+              const fallback = initialWorkforceData.find(iw => iw.email === w.email);
+              if (fallback?.enrolledCourses) return { ...w, enrolledCourses: fallback.enrolledCourses };
+            }
+            return w;
+          });
+        }
+      }
+    } catch (e) {}
+    return initialWorkforceData;
   });
+
+  const [allRegisteredUsers, setAllRegisteredUsers] = useState([]);
 
   const [certificates, setCertificates] = useState(() => {
     const local = localStorage.getItem('admin_certificates');
@@ -367,8 +397,8 @@ export function AdminProvider({ children }) {
 
   const fetchLeaves = async () => {
     try {
-      const token = localStorage.getItem('skillsphere_token') || localStorage.getItem('token');
-      if (!token) return;
+      const token = localStorage.getItem('skillsphere_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
+      if (!token || token.startsWith('mock_token_')) return;
 
       const leavesRes = await fetch(`${API_URL}/api/workforce/leaves`, {
         headers: {
@@ -381,8 +411,8 @@ export function AdminProvider({ children }) {
           setLeaveRequests(leavesData.leaveRequests);
         }
       }
-    } catch (err) {
-      console.error("Failed to fetch leaves:", err);
+    } catch {
+      // Graceful fallback to cached/default leave requests
     }
   };
 
@@ -438,44 +468,62 @@ export function AdminProvider({ children }) {
         const usersData = await usersRes.json();
         if (usersData.success) {
           const allUsers = usersData.users || [];
+          setAllRegisteredUsers(allUsers);
           
           if (allUsers.length > 0) {
-            // Filter students
-            const students = allUsers.filter(u => u.role === "STUDENT").map(u => ({
-              id: u.id,
-              name: u.fullName || u.username,
-              email: u.email,
-              role: u.role,
-              status: u.isActive ? 'Active' : 'Blocked',
-              createdAt: u.createdAt || new Date().toISOString()
-            }));
+            // Filter students (sorted by newest ID/createdAt first)
+            const students = allUsers
+              .filter(u => u.role === "STUDENT")
+              .map(u => ({
+                id: u.id,
+                name: u.fullName || u.username,
+                email: u.email,
+                role: u.role,
+                status: u.isActive ? 'Active' : 'Blocked',
+                createdAt: u.createdAt || new Date().toISOString(),
+                enrolledCourses: u.enrolledCourses || u.enrolled_courses || ""
+              }))
+              .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || b.id - a.id);
+
             setUsers(prev => {
-              const merged = [...students];
+              const userMap = new Map();
+              // Add fresh database records first
+              students.forEach(s => userMap.set(s.email?.toLowerCase() || s.id, s));
+              // Preserve any additional local-only students if not yet on backend
               prev.forEach(p => {
-                if (!merged.some(m => m.email === p.email)) {
-                  merged.push(p);
+                const key = p.email?.toLowerCase() || p.id;
+                if (!userMap.has(key)) {
+                  userMap.set(key, p);
                 }
               });
-              return merged;
+              return Array.from(userMap.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || b.id - a.id);
             });
 
-            // Filter workforce
-            const wf = allUsers.filter(u => u.role === "EMPLOYEE" || u.role === "MANAGER").map(u => ({
-              id: u.id,
-              name: u.fullName || u.username,
-              email: u.email,
-              role: u.role,
-              status: u.isActive ? 'Approved' : 'Pending',
-              createdAt: u.createdAt || new Date().toISOString()
-            }));
+            // Filter workforce (sorted by newest ID/createdAt first)
+            const wf = allUsers
+              .filter(u => u.role === "EMPLOYEE" || u.role === "MANAGER")
+              .map(u => ({
+                id: u.id,
+                name: u.fullName || u.username,
+                email: u.email,
+                role: u.role,
+                dept: u.branch || u.title || "Engineering",
+                status: u.isActive ? 'Approved' : 'Pending',
+                createdAt: u.createdAt || new Date().toISOString(),
+                enrolledCourses: u.enrolledCourses || u.enrolled_courses || ""
+              }))
+              .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || b.id - a.id);
+
             setWorkforce(prev => {
-              const merged = [...wf];
+              const wfMap = new Map();
+              wf.forEach(w => wfMap.set(w.email?.toLowerCase() || w.id, w));
               prev.forEach(p => {
-                if (!merged.some(m => m.email === p.email)) {
-                  merged.push(p);
+                const key = p.email?.toLowerCase() || p.id;
+                if (!wfMap.has(key)) {
+                  wfMap.set(key, p);
                 }
               });
-              return merged;
+              return Array.from(wfMap.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || b.id - a.id);
             });
           }
         }
@@ -487,11 +535,33 @@ export function AdminProvider({ children }) {
 
   useEffect(() => {
     fetchCourses();
+    fetchData();
   }, []);
 
   useEffect(() => {
     if (isAdminAuth) {
       fetchData();
+
+      // Poll periodically so background registrations update in real-time
+      const interval = setInterval(() => {
+        fetchData();
+      }, 10000);
+
+      const handleFocus = () => {
+        fetchData();
+      };
+      window.addEventListener('focus', handleFocus);
+
+      const handleSync = () => {
+        fetchData();
+      };
+      window.addEventListener('skillsphere_sync_event', handleSync);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('skillsphere_sync_event', handleSync);
+      };
     }
   }, [isAdminAuth]);
 
@@ -845,9 +915,13 @@ export function AdminProvider({ children }) {
     courses, addCourse, updateCourse, deleteCourse,
     users, addStudent, toggleStudentStatus, deleteStudent,
     workforce, addWorkforce, changeWorkforceStatus,
+    allRegisteredUsers,
     certificates, addCertificate, deleteCertificate,
     pendingCourseRequests, approveCourseRequest, rejectCourseRequest, refreshPendingRequests,
-    leaveRequests, submitLeaveRequest, approveLeaveRequest, rejectLeaveRequest, refreshLeaveRequests
+    leaveRequests, submitLeaveRequest, approveLeaveRequest, rejectLeaveRequest, refreshLeaveRequests,
+    checkUserEnrolledInCourse,
+    getCourseEnrolledStudents,
+    refreshData: fetchData
   };
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
@@ -858,4 +932,136 @@ export function useAdmin() {
   if (!context) throw new Error('useAdmin must be used within an AdminProvider');
   return context;
 }
+
+// ── Shared Enrollment Calculation Helpers ──
+export const checkUserEnrolledInCourse = (user, course) => {
+  if (!user || !course) return false;
+  const courseIdStr = course.id?.toString();
+  const courseTitleLower = (course.title || '').toLowerCase().trim();
+
+  // 1. Check user.enrolledCourses / user.enrolled_courses
+  const rawField = user.enrolledCourses ?? user.enrolled_courses;
+  if (rawField) {
+    if (Array.isArray(rawField)) {
+      if (rawField.some(c => {
+        const cStr = c?.toString().trim();
+        return cStr === courseIdStr || cStr.toLowerCase() === courseTitleLower;
+      })) {
+        return true;
+      }
+    } else if (typeof rawField === 'string') {
+      const trimmed = rawField.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed) && parsed.some(c => {
+            const cStr = c?.toString().trim();
+            return cStr === courseIdStr || cStr.toLowerCase() === courseTitleLower;
+          })) {
+            return true;
+          }
+        } catch (e) {}
+      }
+      const list = trimmed.split(',').map(s => s.trim());
+      if (list.includes(courseIdStr) || list.some(s => s.toLowerCase() === courseTitleLower)) {
+        return true;
+      }
+    }
+  }
+
+  // 2. Check localStorage entries for this user
+  const uEmail = user.email || user.username;
+  if (uEmail) {
+    const cleanEmail = uEmail.toLowerCase();
+    const storageKeys = [
+      `enrolledCourses_${uEmail}`,
+      `enrolledCourses_${cleanEmail}`,
+      `skillsphere_enrolled_courses_${uEmail}`,
+      `skillsphere_enrolled_courses_${cleanEmail}`,
+      `enrolled_courses_${uEmail}`,
+      `enrolled_courses_${cleanEmail}`
+    ];
+    for (const k of storageKeys) {
+      try {
+        const val = localStorage.getItem(k);
+        if (val) {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) {
+            if (parsed.some(c => {
+              const cStr = c?.toString().trim();
+              return cStr === courseIdStr || cStr.toLowerCase() === courseTitleLower;
+            })) {
+              return true;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  return false;
+};
+
+export const getCourseEnrolledStudents = (course, candidateUsers = [], pendingCourseRequests = []) => {
+  if (!course) return { totalEnrolled: 0, enrolledStudents: [], pendingCount: 0 };
+  const courseIdStr = course.id?.toString();
+  const courseTitleLower = (course.title || '').toLowerCase().trim();
+
+  // Pending count
+  const pendingCount = (pendingCourseRequests || []).filter(r => {
+    if (r.status !== 'pending') return false;
+    const matchId = r.courseId && r.courseId.toString() === courseIdStr;
+    const matchTitle = r.courseTitle && (
+      r.courseTitle.toLowerCase().trim() === courseTitleLower ||
+      r.courseTitle.toLowerCase().includes(courseTitleLower) ||
+      courseTitleLower.includes(r.courseTitle.toLowerCase().trim())
+    );
+    return matchId || matchTitle;
+  }).length;
+
+  const enrolledMap = new Map();
+
+  // 1. From candidate users (students, workforce, all registered users)
+  (candidateUsers || []).forEach(u => {
+    if (checkUserEnrolledInCourse(u, course)) {
+      const key = (u.email || u.username || `user-${u.id}`).toLowerCase();
+      enrolledMap.set(key, {
+        id: u.id,
+        name: u.name || u.fullName || u.username || 'Registered Learner',
+        email: u.email || u.username || 'learner@skillsphere.com',
+        role: u.role || 'STUDENT'
+      });
+    }
+  });
+
+  // 2. From approved course requests
+  (pendingCourseRequests || []).forEach(r => {
+    if (r.status === 'approved') {
+      const matchId = r.courseId && r.courseId.toString() === courseIdStr;
+      const matchTitle = r.courseTitle && (
+        r.courseTitle.toLowerCase().trim() === courseTitleLower ||
+        r.courseTitle.toLowerCase().includes(courseTitleLower) ||
+        courseTitleLower.includes(r.courseTitle.toLowerCase().trim())
+      );
+      if (matchId || matchTitle) {
+        const key = (r.studentEmail || r.studentName || `req-${r.id}`).toLowerCase();
+        if (!enrolledMap.has(key)) {
+          enrolledMap.set(key, {
+            id: r.id,
+            name: r.studentName || 'Student',
+            email: r.studentEmail || '',
+            role: 'STUDENT'
+          });
+        }
+      }
+    }
+  });
+
+  const enrolledStudents = Array.from(enrolledMap.values());
+  return {
+    totalEnrolled: enrolledStudents.length,
+    enrolledStudents,
+    pendingCount
+  };
+};
 

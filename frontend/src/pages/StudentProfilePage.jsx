@@ -37,8 +37,7 @@ export default function StudentProfilePage() {
   const [tempBio, setTempBio] = useState(bio);
 
   const userKey = user?.email || user?.username || "default";
-  const isDemoUser = userKey === "soumitriroy@gmail.com" || userKey === "soumitriroy" || userKey === "default" || user?.isDemo;
-  const [earnedCertsCount, setEarnedCertsCount] = useState(isDemoUser ? 1 : 0);
+  const [earnedCertsCount, setEarnedCertsCount] = useState(0);
 
   useEffect(() => {
     const fetchClaimedCerts = async () => {
@@ -252,21 +251,21 @@ export default function StudentProfilePage() {
   // Dynamic Skill Ratings based on completed topics
   const userCompletedTopics = completedTopics || [];
 
-  const getSkillProgress = (prefixes, totalLessons, demoDefault) => {
+  const getSkillProgress = (prefixes, totalLessons) => {
     const doneCount = userCompletedTopics.filter(topicId =>
       prefixes.some(pref => topicId.startsWith(pref))
     ).length;
     if (doneCount > 0) {
       return Math.min(100, Math.round((doneCount / totalLessons) * 100));
     }
-    return isDemoUser ? demoDefault : 0;
+    return 0;
   };
 
   const skills = [
-    { name: "Frontend Development", value: getSkillProgress(["js_", "react_", "nextjs_"], 36, 85), color: "#3b82f6" },
-    { name: "Backend Architecture", value: getSkillProgress(["node_", "system_", "springboot_"], 31, 70), color: "#10b981" },
-    { name: "Python & Data Science", value: getSkillProgress(["python_", "ml_"], 40, 65), color: "#f59e0b" },
-    { name: "UI/UX Design", value: getSkillProgress(["uiux_"], 14, 75), color: "#ec4899" }
+    { name: "Frontend Development", value: getSkillProgress(["js_", "react_", "nextjs_"], 36), color: "#3b82f6" },
+    { name: "Backend Architecture", value: getSkillProgress(["node_", "system_", "springboot_"], 31), color: "#10b981" },
+    { name: "Python & Data Science", value: getSkillProgress(["python_", "ml_"], 40), color: "#f59e0b" },
+    { name: "UI/UX Design", value: getSkillProgress(["uiux_"], 14), color: "#ec4899" }
   ];
 
   // Profile completion calculations
@@ -553,27 +552,51 @@ export default function StudentProfilePage() {
                       <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Rank Level</span>
                       <strong style={{ color: "var(--accent)" }}>Lvl {level}</strong>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Badges Won</span>
-                      <strong style={{ color: "var(--text-primary)" }}>{compPercent > 50 ? 8 : 4}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Certificates Earned</span>
-                      <strong style={{ color: "var(--accent)" }}>{earnedCertsCount}</strong>
-                    </div>
+                    {(() => {
+                      const userBadgesList = Array.isArray(user?.badges)
+                        ? user.badges
+                        : (typeof user?.badges === 'string' && user.badges ? user.badges.split(',').filter(Boolean) : []);
+
+                      return (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Badges Won</span>
+                            <strong style={{ color: "var(--text-primary)" }}>{userBadgesList.length}</strong>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Certificates Earned</span>
+                            <strong style={{ color: "var(--accent)" }}>{earnedCertsCount}</strong>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
-                <div className="sdRightWidgetCard">
-                  <h4>Unlocked Badges</h4>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginTop: "16px" }}>
-                    {["🔥", "🎯", "💻", "🧠", "🏆", "🌟", "📚", "⚡"].map((badge, idx) => (
-                      <div key={idx} style={{ fontSize: "24px", background: "var(--bg-secondary)", width: "45px", height: "45px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px", border: "1px solid var(--border-color)", cursor: "pointer" }} title={`Badge #${idx + 1}`}>
-                        {badge}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {(() => {
+                  const userBadgesList = Array.isArray(user?.badges)
+                    ? user.badges
+                    : (typeof user?.badges === 'string' && user.badges ? user.badges.split(',').filter(Boolean) : []);
+
+                  return (
+                    <div className="sdRightWidgetCard">
+                      <h4>Unlocked Badges ({userBadgesList.length})</h4>
+                      {userBadgesList.length === 0 ? (
+                        <p style={{ margin: "16px 0 0 0", fontSize: "13px", color: "var(--text-secondary)" }}>
+                          0 badges unlocked yet. Complete lessons and quizzes to earn badges!
+                        </p>
+                      ) : (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginTop: "16px" }}>
+                          {userBadgesList.map((badge, idx) => (
+                            <div key={idx} style={{ fontSize: "20px", background: "var(--bg-secondary)", width: "45px", height: "45px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px", border: "1px solid var(--border-color)", cursor: "pointer" }} title={typeof badge === 'string' ? badge : `Badge #${idx + 1}`}>
+                              🏅
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}

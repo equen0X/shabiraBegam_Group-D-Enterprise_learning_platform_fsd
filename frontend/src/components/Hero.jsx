@@ -15,7 +15,11 @@ export default function Hero() {
   const heroCardRef = useRef(null);
 
   useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const clientId = (rawClientId && !rawClientId.includes('your_google_client_id'))
+      ? rawClientId
+      : '187668431914-r6bca92vusq2seqmopgfa9o5vrub4bi3.apps.googleusercontent.com';
+
     if (!clientId || clientId === 'google_mock_client_id_for_testing') {
       setShowDevBypass(true);
       return;

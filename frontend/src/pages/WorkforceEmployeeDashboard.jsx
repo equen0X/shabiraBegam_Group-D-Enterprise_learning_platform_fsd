@@ -7,7 +7,6 @@ import {
   FaHome,
   FaShieldAlt,
   FaClock,
-  FaRobot,
   FaSignOutAlt,
   FaPlus,
   FaCheckCircle,
@@ -382,45 +381,13 @@ export default function WorkforceEmployeeDashboard() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Chatbot states
-  const [chatMessages, setChatMessages] = useState([
-    { sender: "bot", text: `Hi ${user?.full_name || "there"}! I am your AI Career Coach. Ask me how to upskill or qualify for your next promotion!` }
-  ]);
-  const [chatInput, setChatInput] = useState("");
-
-  const handleSendChat = (e) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    const userMsg = { sender: "user", text: chatInput };
-    setChatMessages(prev => [...prev, userMsg]);
-    const input = chatInput;
-    setChatInput("");
-
-    setTimeout(() => {
-      let reply = "I can guide you on the best learning paths. Try checking out our React or Cloud certification tracks!";
-      if (input.toLowerCase().includes("course") || input.toLowerCase().includes("react")) {
-        reply = "We recommend passing the 'React Hooks Proficiency' assessment. It will unlock your certificate and allow you to promote!";
-      } else if (input.toLowerCase().includes("leave")) {
-        reply = "You can apply for casual or annual leaves directly inside the 'Attendance & Leaves' tab of this dashboard.";
-      } else if (input.toLowerCase().includes("certificate") || input.toLowerCase().includes("cert")) {
-        reply = "Once you pass an assessment with a 100% score, you can view and download your verified certificate in the Certificates tab!";
-      } else if (input.toLowerCase().includes("promotion") || input.toLowerCase().includes("career")) {
-        reply = "To reach Level 3 Tech Lead, make sure to pass the 'Spring Boot Microservices & JPA' assessment!";
-      }
-
-      setChatMessages(prev => [...prev, { sender: "bot", text: reply }]);
-    }, 800);
-  };
-
   // Navigation Items
   const navItems = [
     { id: "Overview", label: "Overview", icon: <FaHome /> },
     { id: "Assessments", label: "Assessments", icon: <FaBolt /> },
     { id: "Certificates", label: "My Certificates", icon: <FaCertificate /> },
     { id: "CareerPromotion", label: "Promotion Flowchart", icon: <FaTrophy /> },
-    { id: "Attendance", label: "My Leaves & Attendance", icon: <FaClock /> },
-    { id: "AI Assistant", label: "AI Career Coach", icon: <FaRobot /> }
+    { id: "Attendance", label: "My Leaves & Attendance", icon: <FaClock /> }
   ];
 
   return (
@@ -508,7 +475,7 @@ export default function WorkforceEmployeeDashboard() {
                   <div className="wf-metric-icon-box" style={{ background: "#e6f4ea" }}><FaTrophy /></div>
                   <span className="wf-metric-title">Promotion Target</span>
                 </div>
-                <div className="wf-metric-value">Lv. 3</div>
+                <div className="wf-metric-value">Lv. {assessments.filter(a => a.passed).length}</div>
                 <div className="wf-metric-trend">Senior Engineer Track</div>
               </div>
               <div className="wf-metric-card" onClick={() => setActiveTab("Attendance")}>
@@ -526,46 +493,48 @@ export default function WorkforceEmployeeDashboard() {
               <div className="wf-card" style={{ padding: "24px" }}>
                 <h3 className="wf-card-title">My Active Team Tasks</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "var(--bg-primary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
-                    <div>
-                      <strong style={{ fontSize: "14px" }}>Refactor Auth Token Verification</strong>
-                      <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>Move from local session state to global JWT middleware verification.</p>
-                    </div>
-                    <span style={{ fontSize: "11px", background: "#FFEBE9", color: "#D9381E", padding: "4px 10px", borderRadius: "10px", fontWeight: "bold" }}>High Priority</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "var(--bg-primary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
-                    <div>
-                      <strong style={{ fontSize: "14px" }}>Implement Vitest Suite</strong>
-                      <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>Write unit tests covering routing redirection and context initialization.</p>
-                    </div>
-                    <span style={{ fontSize: "11px", background: "#FEF7E0", color: "#B06000", padding: "4px 10px", borderRadius: "10px", fontWeight: "bold" }}>Medium Priority</span>
+                  <div style={{ padding: "28px 16px", textAlign: "center", background: "var(--bg-primary)", borderRadius: "12px", border: "1px dashed var(--border-color)" }}>
+                    <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>0 Active Tasks — No active team tasks assigned yet.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="wf-card" style={{ padding: "24px" }}>
-                <h3 className="wf-card-title">Leave Balance</h3>
-                <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                      <span>Casual Leaves</span>
-                      <strong>8 / 12 Days Left</strong>
-                    </div>
-                    <div style={{ height: "8px", background: "var(--border-color)", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "66.6%", height: "100%", background: "#8c5338" }} />
+              {(() => {
+                const casualTaken = leaveRequests
+                  .filter(r => (r.status === "APPROVED" || r.status === "approved") && (r.leaveType?.toLowerCase().includes("casual") || r.type?.toLowerCase().includes("casual")))
+                  .reduce((sum, r) => sum + (Number(r.days) || 1), 0);
+                const sickTaken = leaveRequests
+                  .filter(r => (r.status === "APPROVED" || r.status === "approved") && (r.leaveType?.toLowerCase().includes("sick") || r.type?.toLowerCase().includes("sick")))
+                  .reduce((sum, r) => sum + (Number(r.days) || 1), 0);
+                const casualLeft = Math.max(0, 12 - casualTaken);
+                const sickLeft = Math.max(0, 8 - sickTaken);
+
+                return (
+                  <div className="wf-card" style={{ padding: "24px" }}>
+                    <h3 className="wf-card-title">Leave Balance</h3>
+                    <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
+                          <span>Casual Leaves</span>
+                          <strong>{casualLeft} / 12 Days Left</strong>
+                        </div>
+                        <div style={{ height: "8px", background: "var(--border-color)", borderRadius: "4px", overflow: "hidden" }}>
+                          <div style={{ width: `${(casualLeft / 12) * 100}%`, height: "100%", background: "#8c5338", transition: "width 0.3s ease" }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
+                          <span>Sick Leaves</span>
+                          <strong>{sickLeft} / 8 Days Left</strong>
+                        </div>
+                        <div style={{ height: "8px", background: "var(--border-color)", borderRadius: "4px", overflow: "hidden" }}>
+                          <div style={{ width: `${(sickLeft / 8) * 100}%`, height: "100%", background: "#10b981", transition: "width 0.3s ease" }} />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                      <span>Sick Leaves</span>
-                      <strong>6 / 8 Days Left</strong>
-                    </div>
-                    <div style={{ height: "8px", background: "var(--border-color)", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "75%", height: "100%", background: "#10b981" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           </>
         )}
@@ -912,43 +881,7 @@ export default function WorkforceEmployeeDashboard() {
           </div>
         )}
 
-        {/* TAB 6: AI ASSISTANT */}
-        {activeTab === "AI Assistant" && (
-          <div className="wf-card" style={{ maxWidth: "800px", margin: "0 auto", padding: "28px" }}>
-            <h2 className="wf-card-title">AI Career Coach</h2>
-            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "20px" }}>Ask questions about recommended training, career roadmaps, or leaves.</p>
 
-            <div style={{ height: "300px", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", overflowY: "auto", background: "var(--bg-primary)" }}>
-              {chatMessages.map((msg, idx) => (
-                <div key={idx} style={{ display: "flex", justifyContent: msg.sender === "user" ? "flex-end" : "flex-start", marginBottom: "12px" }}>
-                  <div style={{
-                    padding: "10px 16px",
-                    borderRadius: "14px",
-                    maxWidth: "70%",
-                    fontSize: "13px",
-                    lineHeight: "1.4",
-                    background: msg.sender === "user" ? "#8c5338" : "var(--bg-secondary)",
-                    color: msg.sender === "user" ? "#ffffff" : "var(--text-primary)",
-                    border: msg.sender === "user" ? "none" : "1px solid var(--border-color)"
-                  }}>
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={handleSendChat} style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
-              <input
-                type="text"
-                placeholder="Ask about upskilling or assignments..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                style={{ flex: 1, padding: "10px 16px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-secondary)", color: "var(--text-primary)" }}
-              />
-              <button type="submit" className="wf-btn-primary" style={{ background: "#8c5338" }}>Send</button>
-            </form>
-          </div>
-        )}
 
       </main>
 
@@ -1300,7 +1233,17 @@ export default function WorkforceEmployeeDashboard() {
               <button className="wf-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#8c5338" }} onClick={() => alert("Certificate download initiated as PDF!")}>
                 <FaFilePdf /> Download PDF
               </button>
-              <button className="loginBtn" style={{ display: "inline-flex", alignItems: "center", gap: "6px", border: "1px solid #0077b5", color: "#0077b5" }} onClick={() => alert("Certificate shared to LinkedIn!")}>
+              <button
+                className="loginBtn"
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px", border: "1px solid #0077b5", color: "#0077b5", cursor: "pointer" }}
+                onClick={() => {
+                  const certId = `SS-${selectedCertificate.id.toUpperCase()}-CERT`;
+                  const verifyUrl = `https://skillsphere.edu/verify/${certId}`;
+                  const now = new Date();
+                  const url = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(selectedCertificate.title)}&organizationName=${encodeURIComponent("SkillSphere Nexus")}&issueYear=${now.getFullYear()}&issueMonth=${now.getMonth() + 1}&certUrl=${encodeURIComponent(verifyUrl)}&certId=${encodeURIComponent(certId)}`;
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }}
+              >
                 <FaLinkedin /> Add to LinkedIn
               </button>
             </div>

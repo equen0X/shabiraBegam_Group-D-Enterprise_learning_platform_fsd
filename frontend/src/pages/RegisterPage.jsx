@@ -13,7 +13,10 @@ import {
   FaEyeSlash,
   FaArrowRight,
   FaArrowLeft,
-  FaShieldAlt
+  FaShieldAlt,
+  FaExclamationCircle,
+  FaCheckCircle,
+  FaInfoCircle
 } from 'react-icons/fa';
 
 import studentPortalImg from '../assets/student_portal_illustration.png';
@@ -45,6 +48,20 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [showDevBypass, setShowDevBypass] = useState(true);
 
+  // Form Field Validation States
+  const [fieldErrors, setFieldErrors] = useState({
+    username: '',
+    fullName: '',
+    email: '',
+    password: ''
+  });
+  const [touched, setTouched] = useState({
+    username: false,
+    fullName: false,
+    email: false,
+    password: false
+  });
+
   const googleBtnRef = useRef(null);
   const roleRef = useRef(role);
 
@@ -52,8 +69,83 @@ export default function RegisterPage() {
     roleRef.current = role;
   }, [role]);
 
+  // Validate single field according to requirements
+  const validateField = (fieldName, value, currentRole = role) => {
+    switch (fieldName) {
+      case 'username': {
+        const trimmed = (value || '').trim();
+        if (!trimmed) return 'Username is required';
+        if (trimmed.length < 3) return 'Username must be at least 3 characters long';
+        if (!/^[a-zA-Z0-9_.-]+$/.test(trimmed)) {
+          return 'Only letters, numbers, underscores, or hyphens allowed';
+        }
+        return '';
+      }
+      case 'fullName': {
+        const trimmed = (value || '').trim();
+        if (!trimmed) return 'Full name is required';
+        if (trimmed.length < 2) return 'Please enter your full name (at least 2 characters)';
+        return '';
+      }
+      case 'email': {
+        const trimmed = (value || '').trim();
+        if (!trimmed) return 'Email address is required';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmed)) {
+          return 'Please enter a valid email format';
+        }
+        const lower = trimmed.toLowerCase();
+        if (currentRole === 'STUDENT') {
+          if (!lower.endsWith('@gmail.com')) {
+            return 'Students must register with a valid @gmail.com email address';
+          }
+        } else {
+          if (!lower.endsWith('@skillsphere.com')) {
+            return 'Workforce accounts must register with an official @skillsphere.com corporate email';
+          }
+        }
+        return '';
+      }
+      case 'password': {
+        if (!value) return 'Password is required';
+        if (value.length < 6) return 'Password must be at least 6 characters long';
+        return '';
+      }
+      default:
+        return '';
+    }
+  };
+
+  const handleFieldBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    let val = '';
+    if (field === 'username') val = username;
+    if (field === 'fullName') val = fullName;
+    if (field === 'email') val = email;
+    if (field === 'password') val = password;
+    const err = validateField(field, val, role);
+    setFieldErrors(prev => ({ ...prev, [field]: err }));
+  };
+
+  const handleFieldChange = (field, value) => {
+    if (field === 'username') setUsername(value);
+    if (field === 'fullName') setFullName(value);
+    if (field === 'email') setEmail(value);
+    if (field === 'password') setPassword(value);
+
+    // Live validation if touched
+    if (touched[field]) {
+      const err = validateField(field, value, role);
+      setFieldErrors(prev => ({ ...prev, [field]: err }));
+    }
+  };
+
   useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const clientId = (rawClientId && !rawClientId.includes('your_google_client_id'))
+      ? rawClientId
+      : '187668431914-r6bca92vusq2seqmopgfa9o5vrub4bi3.apps.googleusercontent.com';
+
     if (!clientId || clientId === 'google_mock_client_id_for_testing') {
       return;
     }
@@ -67,8 +159,14 @@ export default function RegisterPage() {
                 setError('');
                 const registeredUser = await loginWithGoogle(response.credential, roleRef.current);
                 if (registeredUser) {
-                  if (roleRef.current === 'EMPLOYEE' && (registeredUser.email.toLowerCase().includes('student') || registeredUser.email.toLowerCase().endsWith('.edu'))) {
-                    setError('Enter valid workplace email id');
+                  const registeredEmail = (registeredUser.email || '').toLowerCase();
+                  if (roleRef.current === 'STUDENT' && !registeredEmail.endsWith('@gmail.com')) {
+                    setError('Students must sign in using a valid @gmail.com account.');
+                    await logout();
+                    return;
+                  }
+                  if (roleRef.current === 'EMPLOYEE' && !registeredEmail.endsWith('@skillsphere.com')) {
+                    setError('Workforce members must register using an official @skillsphere.com email.');
                     await logout();
                     return;
                   }
@@ -103,13 +201,36 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (role === 'EMPLOYEE' && (email.toLowerCase().includes('student') || email.toLowerCase().endsWith('.edu'))) {
-      setError('Enter valid workplace email id');
+
+    // Mark all as touched
+    setTouched({
+      username: true,
+      fullName: true,
+      email: true,
+      password: true
+    });
+
+    const userErr = validateField('username', username, role);
+    const nameErr = validateField('fullName', fullName, role);
+    const emailErr = validateField('email', email, role);
+    const passErr = validateField('password', password, role);
+
+    const newErrors = {
+      username: userErr,
+      fullName: nameErr,
+      email: emailErr,
+      password: passErr
+    };
+    setFieldErrors(newErrors);
+
+    if (userErr || nameErr || emailErr || passErr) {
+      setError(emailErr || userErr || nameErr || passErr);
       return;
     }
+
     try {
       setError('');
-      const registeredUser = await signupLocal(username, fullName, email, password, role);
+      const registeredUser = await signupLocal(username.trim(), fullName.trim(), email.trim(), password, role);
       if (registeredUser && registeredUser.role === 'STUDENT') {
         navigate('/student-home');
       } else {
@@ -122,9 +243,14 @@ export default function RegisterPage() {
 
   const handleDevBypass = async (e) => {
     e.preventDefault();
-    const targetEmail = email || (role === 'STUDENT' ? 'newstudent@skillsphere.com' : 'newemployee@company.com');
-    if (role === 'EMPLOYEE' && (targetEmail.toLowerCase().includes('student') || targetEmail.toLowerCase().endsWith('.edu'))) {
-      setError('Enter valid workplace email id');
+    const targetEmail = email || (role === 'STUDENT' ? 'newstudent@gmail.com' : 'newemployee@skillsphere.com');
+    const lower = targetEmail.toLowerCase();
+    if (role === 'STUDENT' && !lower.endsWith('@gmail.com')) {
+      setError('Students must register with a valid @gmail.com email address');
+      return;
+    }
+    if (role === 'EMPLOYEE' && !lower.endsWith('@skillsphere.com')) {
+      setError('Workforce members must register with an official @skillsphere.com corporate email');
       return;
     }
     try {
@@ -180,7 +306,13 @@ export default function RegisterPage() {
 
                 <button
                   className="btnSignUpType"
-                  onClick={() => { setRole('STUDENT'); setStep(2); }}
+                  onClick={() => {
+                    setRole('STUDENT');
+                    setStep(2);
+                    setError('');
+                    setFieldErrors({ username: '', fullName: '', email: '', password: '' });
+                    setTouched({ username: false, fullName: false, email: false, password: false });
+                  }}
                 >
                   Sign Up as Student <FaArrowRight />
                 </button>
@@ -198,7 +330,13 @@ export default function RegisterPage() {
 
                 <button
                   className="btnSignUpType"
-                  onClick={() => { setRole('EMPLOYEE'); setStep(2); }}
+                  onClick={() => {
+                    setRole('EMPLOYEE');
+                    setStep(2);
+                    setError('');
+                    setFieldErrors({ username: '', fullName: '', email: '', password: '' });
+                    setTouched({ username: false, fullName: false, email: false, password: false });
+                  }}
                 >
                   Sign Up as Workforce <FaArrowRight />
                 </button>
@@ -227,59 +365,88 @@ export default function RegisterPage() {
 
             {error && <div className="errorMessageCard">{error}</div>}
 
-            <form onSubmit={handleSubmit} className="loginFormContent">
+            <form onSubmit={handleSubmit} className="loginFormContent" noValidate>
               {/* Username Field */}
               <div className="inputFieldGroup">
-                <label htmlFor="reg-username">Username</label>
-                <div className="inputWithIconWrapper">
+                <label htmlFor="reg-username">Username *</label>
+                <div className={`inputWithIconWrapper ${touched.username && fieldErrors.username ? 'has-error' : touched.username && username ? 'has-success' : ''}`}>
                   <FaUser className="fieldPrefixIcon" />
                   <input
                     id="reg-username"
                     type="text"
                     placeholder="johndoe"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => handleFieldChange('username', e.target.value)}
+                    onBlur={() => handleFieldBlur('username')}
                     required
                   />
                 </div>
+                {touched.username && fieldErrors.username && (
+                  <div className="fieldErrorMessage">
+                    <FaExclamationCircle /> {fieldErrors.username}
+                  </div>
+                )}
               </div>
 
               {/* Full Name Field */}
               <div className="inputFieldGroup">
-                <label htmlFor="reg-fullname">Full Name</label>
-                <div className="inputWithIconWrapper">
+                <label htmlFor="reg-fullname">Full Name *</label>
+                <div className={`inputWithIconWrapper ${touched.fullName && fieldErrors.fullName ? 'has-error' : touched.fullName && fullName ? 'has-success' : ''}`}>
                   <FaUser className="fieldPrefixIcon" />
                   <input
                     id="reg-fullname"
                     type="text"
                     placeholder="John Doe"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => handleFieldChange('fullName', e.target.value)}
+                    onBlur={() => handleFieldBlur('fullName')}
                     required
                   />
                 </div>
+                {touched.fullName && fieldErrors.fullName && (
+                  <div className="fieldErrorMessage">
+                    <FaExclamationCircle /> {fieldErrors.fullName}
+                  </div>
+                )}
               </div>
 
               {/* Email Address Field */}
               <div className="inputFieldGroup">
-                <label htmlFor="reg-email">Email Address</label>
-                <div className="inputWithIconWrapper">
+                <label htmlFor="reg-email">Email Address *</label>
+                <div className={`inputWithIconWrapper ${touched.email && fieldErrors.email ? 'has-error' : touched.email && email ? 'has-success' : ''}`}>
                   <FaEnvelope className="fieldPrefixIcon" />
                   <input
                     id="reg-email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder={role === 'STUDENT' ? "johndoe@gmail.com" : "johndoe@skillsphere.com"}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleFieldChange('email', e.target.value)}
+                    onBlur={() => handleFieldBlur('email')}
                     required
                   />
                 </div>
+
+                {/* Role Domain Requirement Badge */}
+                <div className="fieldDomainNotice">
+                  <FaInfoCircle />
+                  <span>
+                    {role === 'STUDENT'
+                      ? 'Student requirement: must register with a valid @gmail.com email'
+                      : 'Workforce requirement: must register with an official @skillsphere.com email'}
+                  </span>
+                </div>
+
+                {touched.email && fieldErrors.email && (
+                  <div className="fieldErrorMessage">
+                    <FaExclamationCircle /> {fieldErrors.email}
+                  </div>
+                )}
               </div>
 
               {/* Password Field */}
               <div className="inputFieldGroup">
-                <label htmlFor="reg-password">Password</label>
-                <div className="inputWithIconWrapper">
+                <label htmlFor="reg-password">Password *</label>
+                <div className={`inputWithIconWrapper ${touched.password && fieldErrors.password ? 'has-error' : touched.password && password ? 'has-success' : ''}`}>
                   <FaLock className="fieldPrefixIcon" />
                   <input
                     id="reg-password"
@@ -291,7 +458,8 @@ export default function RegisterPage() {
                     data-form-type="other"
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handleFieldChange('password', e.target.value)}
+                    onBlur={() => handleFieldBlur('password')}
                     required
                     minLength={6}
                   />
@@ -303,6 +471,15 @@ export default function RegisterPage() {
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
+                {touched.password && fieldErrors.password ? (
+                  <div className="fieldErrorMessage">
+                    <FaExclamationCircle /> {fieldErrors.password}
+                  </div>
+                ) : (
+                  <div className="fieldHelperText">
+                    <span>Minimum 6 characters</span>
+                  </div>
+                )}
               </div>
 
               {/* Complete Sign-Up Button */}
@@ -323,7 +500,12 @@ export default function RegisterPage() {
               <button
                 type="button"
                 className="btnBackTypes"
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setStep(1);
+                  setError('');
+                  setFieldErrors({ username: '', fullName: '', email: '', password: '' });
+                  setTouched({ username: false, fullName: false, email: false, password: false });
+                }}
               >
                 Back to account types
               </button>

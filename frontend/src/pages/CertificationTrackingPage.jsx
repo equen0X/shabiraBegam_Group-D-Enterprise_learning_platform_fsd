@@ -75,7 +75,7 @@ export default function CertificationTrackingPage() {
       const pct = Math.min(100, Math.round((totalDone / 12) * 100));
       return Math.min(totalModules, Math.ceil((pct / 100) * totalModules));
     }
-    return isDemoUser ? demoDefault : 0;
+    return 0;
   };
 
   const certPaths = [

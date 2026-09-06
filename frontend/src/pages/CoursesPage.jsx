@@ -384,7 +384,7 @@ export default function CoursesPage() {
     } catch (e) {}
     let dbList = Array.isArray(user?.enrolled_courses) ? user.enrolled_courses.map(id => id.toString()) : [];
     const combined = Array.from(new Set([...authList, ...localList, ...dbList]));
-    return combined.length > 0 ? combined : ["1", "2"];
+    return combined;
   };
 
   const allEnrolled = getUnifiedEnrolledCourseIds();
